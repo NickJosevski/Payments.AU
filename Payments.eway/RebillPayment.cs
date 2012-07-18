@@ -1,12 +1,13 @@
 using System;
+using System.Globalization;
 using System.Xml;
 
 namespace Payments.eway
 {
     /// <summary>
-    /// RebillPayment Object
+    /// ReBill Payment (recurring payments)
     /// </summary>
-    public class RebillPayment
+    public class RebillPaymentMessage : EpayMessage
     {
         public string eWAYCustomerID { get; set; }
         public string ewayURL { get; set; }
@@ -42,150 +43,58 @@ namespace Payments.eway
         public string RebillIntervalType { get; set; }
         public string RebillEndDate { get; set; }
 
-        public string AsXml()
+        public override string AsXml()
         {
             var xmlRebill = new XmlDocument();
-            XmlNode nodeRoot = null;
-            XmlNode nodeNewRebill = null;
-            XmlNode nodeCustomer = null;
-            XmlNode nodeCustomerDetails = null;
-            XmlNode nodeRebillEvent = null;
-            XmlNode nodeRebillDetails = null;
 
-            nodeRoot = xmlRebill.CreateNode(XmlNodeType.Element, "RebillUpload", "");
-            nodeNewRebill = xmlRebill.CreateNode(XmlNodeType.Element, "NewRebill", "");
+            var nodeRoot = xmlRebill.CreateNode(XmlNodeType.Element, "RebillUpload", "");
+            var nodeNewRebill = xmlRebill.CreateNode(XmlNodeType.Element, "NewRebill", "");
 
-            nodeCustomer = xmlRebill.CreateNode(XmlNodeType.Element, "eWayCustomerID", "");
+            var nodeCustomer = xmlRebill.CreateNode(XmlNodeType.Element, "eWayCustomerID", "");
             nodeCustomer.InnerText = eWAYCustomerID;
             nodeNewRebill.AppendChild(nodeCustomer);
 
             // Customer 
             nodeCustomer = xmlRebill.CreateNode(XmlNodeType.Element, "Customer", "");
 
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerRef", "");
-            nodeCustomerDetails.InnerText = CustomerRef;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerRef", CustomerRef);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerTitle", CustomerTitle);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerFirstName", CustomerFirstName);
 
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerTitle", "");
-            nodeCustomerDetails.InnerText = CustomerTitle;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerLastName", CustomerLastName);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerCompany", CustomerCompany);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerJobDesc", CustomerJobDesc);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerEmail", CustomerEmail);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerAddress", CustomerAddress);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerSuburb", CustomerSuburb);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerState", CustomerState);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerPostCode", CustomerPostCode);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerCountry", CustomerCountry);
 
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerFirstName", "");
-            nodeCustomerDetails.InnerText = CustomerFirstName;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerLastName", "");
-            nodeCustomerDetails.InnerText = CustomerLastName;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerCompany", "");
-            nodeCustomerDetails.InnerText = CustomerCompany;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerJobDesc", "");
-            nodeCustomerDetails.InnerText = CustomerJobDesc;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerEmail", "");
-            nodeCustomerDetails.InnerText = CustomerEmail;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerAddress", "");
-            nodeCustomerDetails.InnerText = CustomerAddress;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerSuburb", "");
-            nodeCustomerDetails.InnerText = CustomerSuburb;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerState", "");
-            nodeCustomerDetails.InnerText = CustomerState;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerPostCode", "");
-            nodeCustomerDetails.InnerText = CustomerPostCode;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerCountry", "");
-            nodeCustomerDetails.InnerText = CustomerCountry;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerPhone1", "");
-            nodeCustomerDetails.InnerText = CustomerPhone1;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerPhone2", "");
-            nodeCustomerDetails.InnerText = CustomerPhone2;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerFax", "");
-            nodeCustomerDetails.InnerText = CustomerFax;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerURL", "");
-            nodeCustomerDetails.InnerText = CustomerUrl;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
-
-            nodeCustomerDetails = xmlRebill.CreateNode(XmlNodeType.Element, "CustomerComments", "");
-            nodeCustomerDetails.InnerText = CustomerComments;
-            nodeCustomer.AppendChild(nodeCustomerDetails);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerPhone1", CustomerPhone1);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerPhone2", CustomerPhone2);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerFax", CustomerFax);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerURL", CustomerUrl);
+            CreateAndAppendChild(xmlRebill, nodeCustomer, "CustomerComments", CustomerComments);
 
             nodeNewRebill.AppendChild(nodeCustomer);
 
             // ReBill Events
-            nodeRebillEvent = xmlRebill.CreateNode(XmlNodeType.Element, "RebillEvent", "");
+            var nodeRebillEvent = xmlRebill.CreateNode(XmlNodeType.Element, "RebillEvent", "");
 
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillInvRef", "");
-            nodeRebillDetails.InnerText = RebillInvRef;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillInvDesc", "");
-            nodeRebillDetails.InnerText = RebillInvDesc;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillCCName", "");
-            nodeRebillDetails.InnerText = RebillCCName;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillCCNumber", "");
-            nodeRebillDetails.InnerText = RebillCCNumber;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillCCExpMonth", "");
-            nodeRebillDetails.InnerText = RebillCCExpMonth;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillCCExpYear", "");
-            nodeRebillDetails.InnerText = RebillCCExpYear;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillInitAmt", "");
-            nodeRebillDetails.InnerText = RebillInitAmt;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillInitDate", "");
-            nodeRebillDetails.InnerText = RebillInitDate;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillRecurAmt", "");
-            nodeRebillDetails.InnerText = RebillRecurAmt;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillStartDate", "");
-            nodeRebillDetails.InnerText = RebillStartDate;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillInterval", "");
-            nodeRebillDetails.InnerText = RebillInterval;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillIntervalType", "");
-            nodeRebillDetails.InnerText = RebillIntervalType;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
-
-            nodeRebillDetails = xmlRebill.CreateNode(XmlNodeType.Element, "RebillEndDate", "");
-            nodeRebillDetails.InnerText = RebillEndDate;
-            nodeRebillEvent.AppendChild(nodeRebillDetails);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillInvRef", RebillInvRef);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillInvDesc", RebillInvDesc);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillCCName", RebillCCName);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillCCNumber", RebillCCNumber);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillCCExpMonth", RebillCCExpMonth);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillCCExpYear", RebillCCExpYear);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillInitAmt", RebillInitAmt);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillInitDate", RebillInitDate);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillRecurAmt", RebillRecurAmt);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillStartDate", RebillStartDate);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillInterval", RebillInterval);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillIntervalType", RebillIntervalType);
+            CreateAndAppendChild(xmlRebill, nodeRebillEvent, "RebillEndDate", RebillEndDate);
 
             nodeNewRebill.AppendChild(nodeRebillEvent);
 
@@ -194,6 +103,109 @@ namespace Payments.eway
             xmlRebill.AppendChild(nodeRoot);
 
             return xmlRebill.InnerXml;
+        }
+    }
+
+    /// <summary>
+    /// An ePay refund request
+    /// </summary>
+    public class RefundRequestMessage : EpayMessage
+    {
+        private string _txCardExpiryMonth = "01";
+        private string _txCardExpiryYear = "00";
+        private string _txTransactionNumber = string.Empty;
+        private string _txOption1 = string.Empty;
+        private string _txOption2 = string.Empty;
+        private string _txOption3 = string.Empty;
+        private string _txRefundPassword = string.Empty;
+
+        public RefundRequestMessage()
+        {
+            InvoiceAmount = 0;
+            EwayCustomerID = string.Empty;
+        }
+
+        public string EwayCustomerID { get; set; }
+
+        public int InvoiceAmount { get; set; }
+
+        public string CardExpiryMonth
+        {
+            get
+            {
+                return _txCardExpiryMonth;
+            }
+
+            set
+            {
+                _txCardExpiryMonth = value;
+            }
+        }
+
+        public string CardExpiryYear
+        {
+            get
+            {
+                return _txCardExpiryYear;
+            }
+
+            set
+            {
+                _txCardExpiryYear = value;
+            }
+        }
+
+        public string TransactionNumber
+        {
+            get
+            {
+                return _txTransactionNumber;
+            }
+
+            set
+            {
+                _txTransactionNumber = value;
+            }
+        }
+        public string EwayOption1
+        {
+            get { return _txOption1; }
+            set { _txOption1 = value; }
+        }
+        public string EwayOption2
+        {
+            get { return _txOption2; }
+            set { _txOption2 = value; }
+        }
+        public string EwayOption3
+        {
+            get { return _txOption3; }
+            set { _txOption3 = value; }
+        }
+        public string RefundPassword
+        {
+            get { return _txRefundPassword; }
+            set { _txRefundPassword = value; }
+        }
+
+        public override string AsXml()
+        {
+            // We don't really need the overhead of creating an XML DOM object
+            // to really just concatenate a string together.
+
+            var xmlOutput = "<ewaygateway>";
+            xmlOutput += CreateNode("ewayCustomerID", EwayCustomerID);
+            xmlOutput += CreateNode("ewayOriginalTrxnNumber", _txTransactionNumber);
+            xmlOutput += CreateNode("ewayTotalAmount", InvoiceAmount.ToString(CultureInfo.InvariantCulture));
+            xmlOutput += CreateNode("ewayCardExpiryMonth", _txCardExpiryMonth);
+            xmlOutput += CreateNode("ewayCardExpiryYear", _txCardExpiryYear);
+            xmlOutput += CreateNode("ewayOption1", _txOption1);
+            xmlOutput += CreateNode("ewayOption2", _txOption2);
+            xmlOutput += CreateNode("ewayOption3", _txOption3);
+            xmlOutput += CreateNode("ewayRefundPassword", _txRefundPassword);
+            xmlOutput += "</ewaygateway>";
+
+            return xmlOutput;
         }
     }
 }

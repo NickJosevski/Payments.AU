@@ -7,7 +7,7 @@ namespace Payments.eway
 {
     public interface IEpayService
     {
-        bool Subscribe(string customerId, RebillPayment recurringPaymentDetails);
+        bool Subscribe(string customerId, RebillPaymentMessage recurringPaymentDetails);
     }
 
     public class EPayService : IEpayService
@@ -19,7 +19,7 @@ namespace Payments.eway
             _gateway = new GatewayConnector(gatewayUri, timeOut);
         }
 
-        public bool Subscribe(string customerId, RebillPayment recurringPaymentDetails)
+        public bool Subscribe(string customerId, RebillPaymentMessage recurringPaymentDetails)
         {
             recurringPaymentDetails.CustomerRef = customerId;
 

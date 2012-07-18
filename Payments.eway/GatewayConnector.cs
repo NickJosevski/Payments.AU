@@ -32,9 +32,9 @@ namespace Payments.eway
         /// </summary>
         /// <param name="paymentRequest">Payment details</param>
         /// <returns>true or false</returns>
-        public bool ProcessRequest(RebillPayment paymentRequest)
+        public bool ProcessRequest(RebillPaymentMessage paymentRequest)
         {
-            var request = (HttpWebRequest)HttpWebRequest.Create(Uri);
+            var request = (HttpWebRequest)WebRequest.Create(Uri);
             request.Method = "POST";
             request.Timeout = ConnectionTimeout;
             request.ContentType = "application/x-www-form-urlencoded";
