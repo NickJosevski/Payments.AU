@@ -30,7 +30,7 @@ namespace Tests.Payments.eway
                 AccessCode = "AF9802EkhvFnYNhzOr5HWHrvGAp8PxIVKc4rb3RrzHFN8743hd5",
             };
 
-            var result = EwayPayment.GetAccessCodeResult(request);
+            var result = EwayPaymentGateway.GetAccessCodeResult(request);
 
             var responseCode = result.ResponseCode;
             var token = result.TokenCustomerID;
@@ -38,6 +38,26 @@ namespace Tests.Payments.eway
             Assert.NotNull(responseCode);
             Assert.NotNull(token);
         }
+
+        /*
+         * Response Codes (Based on input dolar amount)
+         * 00 - Transaction Approved
+         * 06 - Error
+         * 51 - Insufficient Funds
+         * 96 - System Error
+         * 54 - Expired Pin
+         */
+
+        /*
+        AccessCodes:  
+         * AF9802EkhvFnYNhzOr5HWHrvGAp8PxIVKc4rb3RrzHFN8743hd5 (returns an Approved result)
+         * DOq0XSxG4PilMm501JxHVAFSYLO2UT72wBn25bIzz27345873df (returns a Declined result)
+         * E1HEZyH7uC3ROFOQMV791FrWXarSiK9igYgKJ8m0qAAAoP22bjB (returns an Invalid Card error)
+         * E2pHRUx0dP1cW2n1tb9dJOB21NzcPgZ4EBAro_w6wXYNmV1Oh3p (returns an Invalid Card Holder error)
+         * E3DD7Ci0UQqlBmO3xCPRd7g94BOAG0bgrez5sl28xnQsIVkXOND (returns an Invalid Expiry Date error)
+         * E4hMb9PYwqJEFXDLjohvAeUdJhGzMKMRaDtBovrXPRFmSegVyk0 (returns an Invalid CVN error)
+         */
+
 
         [TestCase("AF9802EkhvFnYNhzOr5HWHrvGAp8PxIVKc4rb3RrzHFN8743hd5", "00")]
         [TestCase("DOq0XSxG4PilMm501JxHVAFSYLO2UT72wBn25bIzz27345873df", "05")]
@@ -47,7 +67,7 @@ namespace Tests.Payments.eway
         //[TestCase("E4hMb9PYwqJEFXDLjohvAeUdJhGzMKMRaDtBovrXPRFmSegVyk0")]
         public void GetAccessCodeResult_ViaAccessCode(string accessCode, string expectedCode)
         {
-            var result = EwayPayment.GetAccessCodeResult(accessCode);
+            var result = EwayPaymentGateway.GetAccessCodeResult(accessCode);
 
             var responseCode = result.ResponseCode;
             var token = result.TokenCustomerID;
@@ -61,9 +81,25 @@ namespace Tests.Payments.eway
         public void CreateCustomer_()
         {
             // Arrange
-            var result = EwayPayment.CreateAndBillCustomer("http://test.com/asdf");
-            
+
+            var customer = new EwayCustomerDetails
+            {
+                Title = "Mr.",
+                FirstName = "Just",
+                LastName = "SetupTheCustomer",
+                Country = "AU",
+            };
+
+            var payment = new EwayPayment
+            {
+                InvoiceDescription = "Customer Created",
+                InvoiceNumber = Guid.NewGuid().ToString(),
+                InvoiceReference = Guid.NewGuid().ToString(),
+                TotalAmount = 1
+            };
+
             // Act
+            var result = EwayPaymentGateway.CreateAndBillCustomer("http://test.com/asdf", customer);
 
             // Assert
             Assert.IsNotNull(result);

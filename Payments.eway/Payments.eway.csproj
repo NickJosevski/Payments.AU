@@ -45,13 +45,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EwayCustomerDetails.cs" />
+    <Compile Include="EwayPaymentGateway.cs" />
     <Compile Include="EwayResponse.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="EwayPayment.cs" />
+    <Compile Include="EwayCustomer.cs" />
     <Compile Include="GatewayConnector.cs" />
     <Compile Include="EpayMessage.cs" />
     <Compile Include="IEpayService.cs" />
