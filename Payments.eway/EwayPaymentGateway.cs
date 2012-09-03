@@ -5,7 +5,7 @@ using Payments.eway.RapidAPI;
 
 namespace Payments.eway
 {
-    public class EwayPaymentGateway
+    public class EwayPaymentGateway : IEwayPaymentGateway
     {
         private static Authentication GetAuthenticationFromConfiguration()
         {
@@ -20,7 +20,7 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 1 -- From Guide
         /// </summary>
-        public static EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, EwayCustomerDetails customer, Payment payment)
+        public EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, EwayCustomerDetails customer, EwayPayment payment)
         {
             if (string.IsNullOrWhiteSpace(redirectUrl)) throw new ArgumentNullException("redirectUrl", "eWAY requires a redirect url");
 
@@ -64,7 +64,7 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 3 -- From Guide
         /// </summary>
-        public static EwayResponse GetAccessCodeResult(String accessCode)
+        public EwayResponse GetAccessCodeResult(String accessCode)
         {
             var auth = GetAuthenticationFromConfiguration();
 
@@ -80,7 +80,7 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 3 -- From Guide
         /// </summary>
-        public static EwayResponse GetAccessCodeResult(GetAccessCodeResultRequest request)
+        public EwayResponse GetAccessCodeResult(GetAccessCodeResultRequest request)
         {
             // Create a new instance of the RapidAPI service and send the request
             using (var service = new RapidAPISoapClient())

@@ -48,6 +48,7 @@
     <Compile Include="EwayCustomerDetails.cs" />
     <Compile Include="EwayPaymentGateway.cs" />
     <Compile Include="EwayResponse.cs" />
+    <Compile Include="IEwayPaymentGateway.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

@@ -99,7 +99,7 @@ namespace Tests.Payments.eway
             };
 
             // Act
-            var result = EwayPaymentGateway.CreateAndBillCustomer("http://test.com/asdf", customer);
+            var result = EwayPaymentGateway.CreateAndBillCustomer("http://test.com/asdf", customer, payment);
 
             // Assert
             Assert.IsNotNull(result);
