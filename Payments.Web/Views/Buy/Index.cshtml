@@ -1,0 +1,125 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    
+    <script type="text/javascript" src="~/Scripts/eway.js"></script>
+    <script>
+        
+        //Runs after response from gateway
+        function ewayResponseHandler(status, response) {
+            console.log('ewayResponseHandler status = ');
+            console.log(status);
+            console.log('ewayResponseHandler response = ');
+            
+            if (response.error) {
+                // re-enable the submit button
+                $('.submit-button').removeAttr("disabled");
+                // show the errors on the form
+                $(".payment-errors").html(response.error.message);
+            } else {
+                var form$ = $("#payment-form");
+                
+                // token contains id, last4, and card type
+                var token = response['id'];
+                // insert the token into the form so it gets submitted to the server
+                /*form$.append("<input type='hidden' name='stripeToken' value='" + token + "' />");
+                // and submit
+                form$.get(0).setAttribute('action', 'PaymentComplete');
+                form$.get(0).submit();*/
+
+                $('#information').text('payment is being processed, please wait...');
+
+                $.ajax({
+                    url: '/Billing/PaymentComplete',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: JSON.stringify(response),
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (result) {
+                         console.log('done');
+                    },
+                });
+            }
+
+            // Wire up the form to submit 
+            $(document).ready(function () {
+                $("#payment-form").submit(function (event) {
+                    // disable the submit button to prevent repeated clicks
+                    $('.submit-button').attr("disabled", "disabled");
+                    // createToken returns immediately - the supplied callback submits the form if there are no errors
+                    Stripe.createToken({
+                        number: $('.card-number').val(),
+                        cvc: $('.card-cvc').val(),
+                        exp_month: $('.card-expiry-month').val(),
+                        exp_year: $('.card-expiry-year').val()
+                    }, stripeResponseHandler);
+
+                    /*
+                    EWAY_ACCESSCODE
+                    EWAY_CARDNAME
+                    EWAY_CARDNUMBER
+                    EWAY_CARDMONTH
+                    EWAY_CARDYEAR
+                    EWAY_CARDCVN
+                    */
+                    
+                    $.ajax({
+                        url: '/Billing/PaymentComplete',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: JSON.stringify(response),
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (status, response) {
+                            $(".payment-errors").text('post to eway failed');
+                            console.log('done - submit to eWAY');
+                            ewayResponseHandler(status, response);
+                        },
+                        error: function () {
+                            console.log('post to eWAY FAILED');
+                            $(".payment-errors").text('post to eway failed');
+                        }
+                    });
+
+
+                    event.preventDefault();
+                    return false; // submit from callback
+                });
+            });
+        };
+        
+    </script>
+</head>
+<body>
+    <br/>
+    <h3>Payment test</h3>
+    <div id ="information">info</div>
+    <!-- to display errors returned by createToken -->
+    <div style="background-color: lightblue"><h4>debug:</h4>
+        <span class="payment-errors"></span>
+    </div>
+    <form action="" method="POST" id="payment-form">
+        <div class="form-row">
+            <label>Card Number</label>
+            <input type="text" size="20" autocomplete="off" class="card-number" value="4000000000000101" />
+        </div>
+        <div class="form-row">
+            <label>CVC</label>
+            <input type="text" size="4" autocomplete="off" class="card-cvc" value="88" />
+        </div>
+        <div class="form-row">
+            <label>Expiration (MM/YYYY)</label>
+            <input type="text" size="2" class="card-expiry-month" value="12"/>
+            <span> / </span>
+            <input type="text" size="4" class="card-expiry-year" value="2015"/>
+        </div>
+        <button type="submit" class="submit-button">Submit Payment</button>
+    </form>
+</body>
+</html>
