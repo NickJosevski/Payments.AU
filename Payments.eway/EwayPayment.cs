@@ -31,12 +31,7 @@ namespace Payments.eway
             request.Authentication = auth;
 
         }
-
-        public static bool ReturnsTrue()
-        {
-            return true;
-        }
-
+        
         /*
          * Response Codes (Based on input dolar amount)
          * 00 - Transaction Approved
@@ -56,19 +51,9 @@ namespace Payments.eway
          * E4hMb9PYwqJEFXDLjohvAeUdJhGzMKMRaDtBovrXPRFmSegVyk0 (returns an Invalid CVN error)
          */
 
-        public static void TestWith()
+        public static EwayResponse GetAccessCodeResult(String accessCode)
         {
-
-        }
-
-        public static EwayResponse CreateCustomer(String accessCode)
-        {
-            var auth = new Authentication
-            {
-                Username = ConfigurationManager.AppSettings["Payment.Username"],
-                Password = ConfigurationManager.AppSettings["Payment.Password"],
-                CustomerID = Convert.ToInt32(ConfigurationManager.AppSettings["Payment.CustomerID"])
-            };
+            var auth = GetAuthenticationFromConfiguration();
 
             var request = new GetAccessCodeResultRequest
             {
@@ -76,10 +61,60 @@ namespace Payments.eway
                 AccessCode = accessCode,
             };
 
-            return CreateCustomer(request);
+            return GetAccessCodeResult(request);
         }
 
-        public static EwayResponse CreateCustomer(GetAccessCodeResultRequest request)
+        private static Authentication GetAuthenticationFromConfiguration()
+        {
+            return new Authentication
+                {
+                    Username = ConfigurationManager.AppSettings["Payment.Username"],
+                    Password = ConfigurationManager.AppSettings["Payment.Password"],
+                    CustomerID = Convert.ToInt32(ConfigurationManager.AppSettings["Payment.CustomerID"])
+                };
+        }
+
+        public static EwayCustomerDetails CreateAndBillCustomer(string redirectUrl)
+        {
+            if (string.IsNullOrWhiteSpace(redirectUrl)) throw new ArgumentNullException("redirectUrl", "eWAY requires a redirect url");
+            if (string.IsNullOrWhiteSpace(redirectUrl)) throw new ArgumentNullException("redirectUrl", "eWAY requires a redirect url");
+
+            var auth = GetAuthenticationFromConfiguration();
+
+            using (var service = new RapidAPISoapClient())
+            {
+                // When the SaveToken field is set to “true”, and the TokenCustomerID 
+                // field is empty, a new Token customer will be created once the payment has been submitted.
+                var response = service.CreateAccessCode(new CreateAccessCodeRequest
+                    {
+                        Authentication = auth,
+                        Customer = new Customer
+                            {
+                                Title = "Mr.",
+                                FirstName = "Just",
+                                LastName = "SetupTheCustomer",
+                                Country = "AU",
+                                SaveToken = true,
+                                TokenCustomerID = null,
+                            },
+                        RedirectUrl = redirectUrl,
+                        Payment = new Payment
+                            {
+                                InvoiceDescription = "Customer Created",
+                                InvoiceNumber = Guid.NewGuid().ToString(),
+                                InvoiceReference = Guid.NewGuid().ToString(),
+                                TotalAmount = 1
+                            }
+                    });
+
+                return new EwayCustomerDetails
+                    {
+                        Token = response.Customer.TokenCustomerID.ToString()
+                    };
+            }
+        }
+
+        public static EwayResponse GetAccessCodeResult(GetAccessCodeResultRequest request)
         {
             // Create a new instance of the RapidAPI service and send the request
             using (var service = new RapidAPISoapClient())
@@ -119,5 +154,61 @@ namespace Payments.eway
                 }*/
             }
         }
+    }
+
+    public class EwayCustomerDetails
+    {
+        public String Token { get; set; }
+    }
+
+    public class EwayCustomer
+    {
+        public long? ThisokenCustomerIDField { get; set; }
+
+        public bool TokenCustomerIDFieldSpecified { get; set; }
+
+        public bool SaveTokenField { get; set; }
+
+        public string ReferenceField { get; set; }
+
+        public string titleField { get; set; }
+
+        public string firstNameField { get; set; }
+
+        public string lastNameField { get; set; }
+
+        public string companyNameField { get; set; }
+
+        public string jobDescriptionField { get; set; }
+
+        public string street1Field { get; set; }
+
+        public string cityField { get; set; }
+
+        public string stateField { get; set; }
+
+        public string postalCodeField { get; set; }
+
+        public string countryField { get; set; }
+
+        public string emailField { get; set; }
+
+        public string phoneField { get; set; }
+
+        public string mobileField { get; set; }
+
+        public string commentsField { get; set; }
+
+        public string faxField { get; set; }
+
+        public string urlField { get; set; }
+
+        public string cardNumberField { get; set; }
+
+        public string cardNameField { get; set; }
+
+        public string cardExpiryMonthField { get; set; }
+
+        public string cardExpiryYearField { get; set; }
     }
 }
