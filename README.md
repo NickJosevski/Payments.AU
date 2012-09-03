@@ -1,4 +1,5 @@
-Payments.ePay
+Payments.eWay
 =============
 
-A very very basic epay .net wrapper
+A very very basic eWay .NET wrapper for gateway [eWay.com.au]( http://www.eway.com.au/ )
+
