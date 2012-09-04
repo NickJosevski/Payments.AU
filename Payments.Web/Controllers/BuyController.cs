@@ -72,6 +72,9 @@ namespace Payments.Web.Controllers
         }
     }
 
+    /// <summary>
+    /// Only to seed test data, this data will never come from the application.
+    /// </summary>
     public class BasicForm
     {
         public string EWAY_ACCESSCODE { get; set; }

@@ -106,7 +106,7 @@ namespace Tests.Payments.eway
             };
 
             // Act
-            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", customer, payment);
+            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", true, customer, payment);
 
             // Assert
             Assert.IsNotNull(result);
