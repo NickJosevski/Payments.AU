@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Payments.Web.Controllers.PaymentSetup
+@{
     Layout = null;
 }
 
@@ -98,26 +99,30 @@
 </head>
 <body>
     <br/>
-    <h3>Payment test</h3>
+    <h3>Payment test (EWAY)</h3>
     <div id ="information">info</div>
     <!-- to display errors returned by createToken -->
     <div style="background-color: lightblue"><h4>debug:</h4>
         <span class="payment-errors"></span>
     </div>
-    <form action="" method="POST" id="payment-form">
+    <form method="POST" id="payment-form">
+        <div class="form-row">
+            <label>Access Code (Hidden)</label>
+            <input type="text" size="160" autocomplete="off" class="access-code" value="@Model.AccessCode" />
+        </div>
         <div class="form-row">
             <label>Card Number</label>
-            <input type="text" size="20" autocomplete="off" class="card-number" value="4000000000000101" />
+            <input type="text" size="20" autocomplete="off" class="card-number" value="4444333322221111" />
         </div>
         <div class="form-row">
             <label>CVC</label>
-            <input type="text" size="4" autocomplete="off" class="card-cvc" value="88" />
+            <input type="text" size="4" autocomplete="off" class="card-cvc" value="123" />
         </div>
         <div class="form-row">
-            <label>Expiration (MM/YYYY)</label>
+            <label>Expiration (MM/YY)</label>
             <input type="text" size="2" class="card-expiry-month" value="12"/>
             <span> / </span>
-            <input type="text" size="4" class="card-expiry-year" value="2015"/>
+            <input type="text" size="2" class="card-expiry-year" value="14"/>
         </div>
         <button type="submit" class="submit-button">Submit Payment</button>
     </form>

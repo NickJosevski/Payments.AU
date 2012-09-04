@@ -21,6 +21,8 @@
     <IISExpressWindowsAuthentication>enabled</IISExpressWindowsAuthentication>
     <IISExpressUseClassicPipelineMode>false</IISExpressUseClassicPipelineMode>
     <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -137,13 +139,19 @@
     <Content Include="Views\Buy\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Views\PaymentComplete\Index.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\PaymentComplete\PaymentComplete.cshtml" />
+    <Content Include="Views\PaymentComplete\Good.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Buy\BasicForm.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Payments.eway\Payments.eway.csproj">
+      <Project>{0358C1A1-A15F-483A-A928-84007A194660}</Project>
+      <Name>Payments.eway</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Buy\Error.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -173,6 +181,7 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

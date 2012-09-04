@@ -4,21 +4,71 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
+using Payments.eway;
+
 namespace Payments.Web.Controllers
 {
     public class BuyController : Controller
     {
-        //
-        // GET: /Buy/
+        private readonly EwayPaymentGateway _eway;
 
-        public ActionResult Index()
+        private EwayCustomerDetails _customer;
+
+        private EwayPayment _payment;
+
+        public BuyController()
         {
-            return View();
+            // TODO: make this constructor injected
+            _eway = new EwayPaymentGateway();
+
+            // TODO: this won't exist here, this is up to you to manage in your system.
+            _customer = new EwayCustomerDetails
+            {
+                Title = "Mr.",
+                FirstName = "Just",
+                LastName = "SetupTheCustomer",
+                Country = "au",
+            };
+
+            _payment = new EwayPayment
+            {
+                InvoiceDescription = "Customer Created",
+                InvoiceNumber = Guid.NewGuid().ToString(),
+                InvoiceReference = Guid.NewGuid().ToString(),
+                TotalAmount = 4000
+            };
         }
 
+        //
+        // GET: /Buy/
+        public ActionResult Index()
+        {
+            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", false, _customer, _payment);
+
+            if(String.IsNullOrWhiteSpace(result.AccessCode)) return View("Error");
+
+            return View(new PaymentSetup
+            {
+                AccessCode = result.AccessCode
+            });
+        }
+
+        // GET: /BasicForm/
         public ActionResult BasicForm()
         {
-            return View();
+            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", true, _customer, _payment);
+
+            if (String.IsNullOrWhiteSpace(result.AccessCode)) return View("Error");
+
+            return View(new BasicForm
+                {
+                    EWAY_ACCESSCODE = result.AccessCode,
+                    EWAY_CARDCVN = "123",
+                    EWAY_CARDNAME = "Test User",
+                    EWAY_CARDNUMBER = "4444333322221111",
+                    EWAY_CARDMONTH = "12",
+                    EWAY_CARDYEAR = "12",
+                });
         }
     }
 

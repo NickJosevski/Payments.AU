@@ -4,23 +4,43 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
+using Payments.eway;
+
 namespace Payments.Web.Controllers
 {
     public class PaymentCompleteController : Controller
     {
-        //
-        // GET: /PaymentComplete/
+        private readonly EwayPaymentGateway _eway;
 
-        public ActionResult Index()
+        public PaymentCompleteController()
         {
-            return View();
+            // TODO: make this constructor injected
+            _eway = new EwayPaymentGateway();
         }
 
-        public ActionResult PaymentComplete(object response)
+        public ActionResult Good(string accessCode)
         {
-            var x = response;
+            var result = _eway.GetAccessCodeResult(accessCode);
+            var msg = "All Good";
 
-            return View();
+            if(result.ResponseCode != "00")
+                msg = "Not Good";
+
+            return View(new PaymentResposnse { Message = msg, Code = result.ResponseMessage, Token = result.TokenCustomerID });
         }
+    }
+
+    public class PaymentResposnse
+    {
+        public string Code { get; set; }
+
+        public string Message { get; set; }
+
+        public string Token { get; set; }
+    }
+
+    public class PaymentSetup
+    {
+        public string AccessCode { get; set; }
     }
 }

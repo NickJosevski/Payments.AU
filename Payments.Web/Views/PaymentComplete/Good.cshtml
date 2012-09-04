@@ -1,0 +1,27 @@
+﻿@model Payments.Web.Controllers.PaymentResposnse
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>PaymentComplete</title>
+</head>
+<body>
+    <div>
+        @Model.Message
+        @if(@Model.Message != "All Good")
+        {
+            <p> Code was: @Model.Code </p>
+        }
+        else
+        {
+            <div>Success! You have a customer token, to now bill them next time: @Model.Token</div>
+        }
+    </div>
+</body>
+</html>

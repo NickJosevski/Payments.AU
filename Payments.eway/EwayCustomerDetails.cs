@@ -1,14 +1,22 @@
 using System;
 
+using Payments.eway.RapidAPI;
+
 namespace Payments.eway
 {
     public class EwayCustomerDetails
     {
         public String Token { get; set; }
+
         public String Title { get; set; }
+
         public String FirstName { get; set; }
+
         public String LastName { get; set; }
+
         public String Country { get; set; }
+
+        public String AccessCode { get; set; }
     }
 
     public class EwayPayment

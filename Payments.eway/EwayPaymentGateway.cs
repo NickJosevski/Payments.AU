@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using System.Globalization;
 
 using Payments.eway.RapidAPI;
 
@@ -20,8 +21,10 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 1 -- From Guide
         /// </summary>
-        public EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, EwayCustomerDetails customer, EwayPayment payment)
+        public EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, bool redirect, EwayCustomerDetails customer, EwayPayment payment)
         {
+            var mode = redirect ? ResponseMode.Redirect : ResponseMode.Return;
+
             if (string.IsNullOrWhiteSpace(redirectUrl)) throw new ArgumentNullException("redirectUrl", "eWAY requires a redirect url");
 
             var auth = GetAuthenticationFromConfiguration();
@@ -38,23 +41,25 @@ namespace Payments.eway
                                 Title = customer.Title,
                                 FirstName = customer.FirstName,
                                 LastName = customer.LastName,
-                                Country = customer.Country,
+                                Country = customer.Country.ToLower(),
                                 SaveToken = true,
                                 TokenCustomerID = null,
                             },
                         RedirectUrl = redirectUrl,
+                        ResponseMode = mode,
                         Payment = new Payment
                             {
                                 InvoiceDescription = payment.InvoiceDescription,
                                 InvoiceNumber = payment.InvoiceNumber,
                                 InvoiceReference = payment.InvoiceReference,
-                                TotalAmount = 1
+                                TotalAmount = payment.TotalAmount
                             }
                     });
 
                 return new EwayCustomerDetails
                     {
-                        Token = response.Customer.TokenCustomerID.ToString()
+                        Token = response.Customer.TokenCustomerID.ToString(),
+                        AccessCode = response.AccessCode
                     };
             }
         }
@@ -87,6 +92,12 @@ namespace Payments.eway
             {
                 var response = service.GetAccessCodeResult(request);
 
+                if (string.Compare(response.ResponseCode, "00", true, CultureInfo.CurrentCulture) != 0)
+                {
+                    var msg = string.Format("Payment Unsuccessful {2} Response Code:{0}{2}ResponseMessage:{1}{2}", response.ResponseCode, response.ResponseMessage, Environment.NewLine);
+                    throw new EwayPaymentException(msg);
+                }
+
                 return new EwayResponse
                     {
                         // Use the response object to display the details returned by eWAY
@@ -106,6 +117,19 @@ namespace Payments.eway
                         TransactionID = response.TransactionID != null ? response.TransactionID.Value.ToString() : string.Empty,
                         TransactionStatus = response.TransactionStatus != null ? response.TransactionStatus.Value.ToString() : string.Empty,
                     };
+            }
+        }
+
+        public class EwayPaymentException : Exception
+        {
+            public EwayPaymentException(string msg)
+                :base(msg)
+            {
+            }
+
+            public EwayPaymentException(string msg, Exception inner)
+                : base(msg, inner)
+            {
             }
         }
     }

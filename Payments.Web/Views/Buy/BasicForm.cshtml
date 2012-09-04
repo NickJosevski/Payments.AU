@@ -12,24 +12,27 @@
     <title>BasicForm</title>
 </head>
     <body>
-        <h3>ASP form</h3>
+        <h3>EWAY Form</h3>
         <div>
             <form id="eway-payment-form" action="https://au.ewaypayments.com/hotpotato/payment" method="POST" >
                 
                 <!-- This field should contain the access code received from eWAY -->
-                @Html.HiddenFor(m => m.EWAY_ACCESSCODE)
-
+                @Html.EditorFor(m => m.EWAY_ACCESSCODE)
+                <br/>
                 @Html.LabelFor(m => m.EWAY_CARDNAME)
                 @Html.EditorFor(m => m.EWAY_CARDNAME)
+                <br/>
 
                 @Html.LabelFor(m => m.EWAY_CARDNUMBER)
                 @Html.EditorFor(m => m.EWAY_CARDNUMBER)
+                <br/>
                 
                 @Html.LabelFor(m => m.EWAY_CARDMONTH)
                 @Html.EditorFor(m => m.EWAY_CARDMONTH)
                     /
                 @Html.LabelFor(m => m.EWAY_CARDYEAR)
                 @Html.EditorFor(m => m.EWAY_CARDYEAR)
+                <br/>
 
                 @Html.LabelFor(m => m.EWAY_CARDCVN)
                 @Html.EditorFor(m => m.EWAY_CARDCVN)

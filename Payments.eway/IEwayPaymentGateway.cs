@@ -9,7 +9,7 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 1 -- From Guide
         /// </summary>
-        EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, EwayCustomerDetails customer, EwayPayment payment);
+        EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, bool redirect, EwayCustomerDetails customer, EwayPayment payment);
 
         /// <summary>
         /// # STEP 3 -- From Guide

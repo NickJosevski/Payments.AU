@@ -1,4 +1,6 @@
-﻿@{
+﻿@model Payments.Web.Controllers.PaymentResposnse
+
+@{
     Layout = null;
 }
 
@@ -7,11 +9,11 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>PaymentComplete</title>
+    <title>Error</title>
 </head>
 <body>
     <div>
-        Thank you. Your payment completed successfully.
+        Something went wrong: @Model.Message
     </div>
 </body>
 </html>
