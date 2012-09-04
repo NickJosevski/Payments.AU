@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <div style="border: 3px solid red">
+        <h3>iFrame</h3>
+        <form action="" method="POST" id="nested-payment-form">
+            <div class="form-row">
+                <label>Access Code (Hidden)</label>
+                <input type="text" size="160" autocomplete="off" class="access-code" />
+            </div>
+            <div class="form-row">
+                <label>Card Name</label>
+                <input type="text" size="150" autocomplete="off" class="card-name" />
+            </div>
+            <div class="form-row">
+                <label>Card Number</label>
+                <input type="text" size="20" autocomplete="off" class="card-number" />
+            </div>
+            <div class="form-row">
+                <label>CVN</label>
+                <input type="text" size="4" autocomplete="off" class="card-cvn" />
+            </div>
+            <div class="form-row">
+                <label>Expiration (MM/YY)</label>
+                <input type="text" size="2" class="card-expiry-month"/>
+                <span> / </span>
+                <input type="text" size="2" class="card-expiry-year" />
+            </div>
+            <button type="submit" class="submit-button">Submit Payment</button>
+        </form>
+    </div>
+</body>
+</html>

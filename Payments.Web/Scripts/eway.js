@@ -1,5 +1,6 @@
 ﻿
 
+window.eWAY = window.eWAY || {};
 
 
 window.dojox = window.dojox || {};
