@@ -1,6 +1,107 @@
 ﻿
 window.PaymentGateWay = window.PaymentGateWay || {};
 
+window.PaymentGateWay.ewayResponseWait = function(iframe, onSuccess, onTimeout) {
+
+    var checks = 1;
+    
+    function wait() {
+        var response = iframe.contents().find("#eway-response");
+        
+        if (response.get(0)) {
+            
+            onSuccess(response);
+            return;
+        }
+        if (checks > 100) {
+            // waited 1 minute (100 * 600ms) nothing's happened, let user know
+            onTimeout();
+            return;
+        }
+        checks++;
+        setTimeout(wait, 600);
+    }
+
+    wait();
+};
+
+window.PaymentGateWay.ewayPaymentSubmit = function (submit, errorDisplay, iframe, onSuccess, onTimeout) {
+
+    // disable the submit button to prevent repeated clicks
+    $(submit).attr("disabled", "disabled");
+
+    var errors = "";
+
+    var valid = true;
+    if (!window.PaymentGateWay.validateCardNumber($('.card-number').val())) {
+
+        errors = "Looks like you have mistyped your credit card number <br />";
+        valid = false;
+    }
+
+    if (!window.PaymentGateWay.validateExpiry($('.card-expiry-month').val(), $('.card-expiry-year').val())) {
+
+        errors = errors + "Card expiry date is not correct <br />";
+        valid = false;
+    }
+
+    if (!window.PaymentGateWay.validateCVC($('.card-cvc').val())) {
+
+        errors = errors + "Card CVC is not in the correct format needs to be 3 or 4 digits <br />";
+        valid = false;
+    }
+
+    if (valid) {
+        window.PaymentGateWay.processEWayPayment(iframe, {
+            ewayAccessCode: $('.eway-access-code').val(),
+            cardName: $('.card-name').val(),
+            cardNumber: $('.card-number').val(),
+            cardCvc: $('.card-cvc').val(),
+            cardMonth: $('.card-expiry-month').val(),
+            cardYear: $('.card-expiry-year').val()
+        });
+        
+        window.PaymentGateWay.ewayResponseWait(iframe, onSuccess, onTimeout);
+    }
+    else {
+        errorDisplay.html(errors);
+        $(submit).removeAttr("disabled");
+    }
+};
+
+window.PaymentGateWay.processEWayPayment = function (iframe, paymentDetails) {
+    // NOTE: we're not breaching the http://en.wikipedia.org/wiki/Same_origin_policy with this iFrame
+
+    var nestedForm = iframe.contents().find('form');
+
+    // Copy all the card details to the form to send
+    nestedForm.find('.eway-access-code').val(paymentDetails.ewayAccessCode);
+    nestedForm.find('.card-name').val(paymentDetails.cardName);
+    nestedForm.find('.card-number').val(paymentDetails.cardNumber);
+    nestedForm.find('.card-cvc').val(paymentDetails.cardCvc);
+    nestedForm.find('.card-expiry-month').val(paymentDetails.cardMonth);
+    nestedForm.find('.card-expiry-year').val(paymentDetails.cardYear);
+
+    // paranoid check, we've copied fields over to nested form, lets rebuild the details, and validate them as a group
+    var finalDetails =
+        {
+            ewayAccessCode: nestedForm.find('.eway-access-code').val(),
+            cardName: nestedForm.find('.card-name').val(),
+            cardNumber: nestedForm.find('.card-number').val(),
+            cardCvc: nestedForm.find('.card-cvc').val(),
+            cardMonth: nestedForm.find('.card-expiry-month').val(),
+            cardYear: nestedForm.find('.card-expiry-year').val()
+        };
+
+    if (window.PaymentGateWay.isValidForEway(finalDetails)) {
+        // submit the iframe form
+        console.log('ok');
+        nestedForm.submit();
+    } else {
+        console.log('not ok');
+    }
+};
+
 window.PaymentGateWay.isValidForEway = function (details) {
 
     // length of access code should be 157 characters, if it's longer that will be ok, if it grows in the future
@@ -79,8 +180,6 @@ window.PaymentGateWay.validateExpiry = function (month, year) {
     currentTime = new Date;
     expiry.setMonth(expiry.getMonth() - 1);
     expiry.setMonth(expiry.getMonth() + 1, 1);
-    console.log('expiry = ' + expiry);
-    console.log('currentTime = ' + currentTime);
     return expiry > currentTime;
 };
 
