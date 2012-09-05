@@ -119,7 +119,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\eway-payment.html" />
-    <Content Include="Scripts\eway.js" />
+    <Content Include="Scripts\PaymentGateWay.js" />
     <Content Include="Views\Buy\eway-payment.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">

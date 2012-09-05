@@ -69,7 +69,7 @@ namespace Tests.Payments.eway
 
         //[TestCase("AF9802EkhvFnYNhzOr5HWHrvGAp8PxIVKc4rb3RrzHFN8743hd5", "00")]
         //[TestCase("DOq0XSxG4PilMm501JxHVAFSYLO2UT72wBn25bIzz27345873df", "05")]
-        [TestCase("A1001wxoePOfJEduhTE-opWO5FuH4m2LLPm4XsGid1oNoIcBB_JDhNVxTOo9L5dOEUc__YlPzUpFcU67Ey4Sj3_HpLYtXLs60B2VMGIiAE_HYhpZ1qdJ2mEmeVqQAjcVFg8y34Rnvwehw_ax_kBSoc8SjHw==", "00")]
+        [TestCase("C3AB9uGyo6QusEpJk0oVOz-VEcyKxeCd0-iepdwO_PUJti6f3SwZvu-cfWmUxvaHs3E9yqf9_i1UYzYLN3ghHgisrBiCd7Gfdej0tWOQE3oOyWjlLB1IgHBFrAQ-krfE96mObKoOhjCgwEvwnZVDDyd7bsw==", "00")]
         //[TestCase("E1HEZyH7uC3ROFOQMV791FrWXarSiK9igYgKJ8m0qAAAoP22bjB")]
         //[TestCase("E2pHRUx0dP1cW2n1tb9dJOB21NzcPgZ4EBAro_w6wXYNmV1Oh3p")]
         //[TestCase("E3DD7Ci0UQqlBmO3xCPRd7g94BOAG0bgrez5sl28xnQsIVkXOND")]
@@ -82,6 +82,7 @@ namespace Tests.Payments.eway
             var token = result.TokenCustomerID;
 
             Console.WriteLine("Token: " + token);
+            Assert.IsEmpty(result.ResponseMessage);
             Assert.AreEqual(expectedCode, responseCode);
         }
 
@@ -106,7 +107,7 @@ namespace Tests.Payments.eway
             };
 
             // Act
-            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", true, customer, payment);
+            var result = _eway.CreateCustomerWithPaymentRequirement("http://localhost:51868/PaymentComplete/Good", true, customer, payment);
 
             // Assert
             Assert.IsNotNull(result);

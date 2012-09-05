@@ -4,32 +4,31 @@
     <title></title>
 </head>
 <body>
-    <div style="border: 3px solid red">
-        <h3>iFrame</h3>
-        <form action="" method="POST" id="payment-form">
+    <div style="border: 3px solid chartreuse">
+        <form id="nested-payment-form" action="https://au.ewaypayments.com/hotpotato/payment" method="POST" >
             <div class="form-row">
                 <label>Access Code (Hidden)</label>
-                <input type="text" size="160" autocomplete="off" class="access-code" />
+                <input id="EWAY_ACCESSCODE" name="EWAY_ACCESSCODE" type="text" maxlength="160" autocomplete="off" class="eway-access-code" />
             </div>
             <div class="form-row">
                 <label>Card Name</label>
-                <input type="text" size="150" autocomplete="off" class="card-name" />
+                <input id="EWAY_CARDNAME"  name="EWAY_CARDNAME" type="text" maxlength="150" size="30"  autocomplete="off" class="card-name" />
             </div>
             <div class="form-row">
                 <label>Card Number</label>
-                <input type="text" size="20" autocomplete="off" class="card-number" />
+                <input id="EWAY_CARDNUMBER"  name="EWAY_CARDNUMBER" type="text" maxlength="20" size="20" autocomplete="off" class="card-number" />
             </div>
             <div class="form-row">
-                <label>CVN</label>
-                <input type="text" size="4" autocomplete="off" class="card-cvn" />
+                <label>CVC</label>
+                <input id="EWAY_CARDCVN"  name="EWAY_CARDCVN" type="text" maxlength="4" size="4" autocomplete="off" class="card-cvc" />
             </div>
             <div class="form-row">
-                <label>Expiration (MM/YY)</label>
-                <input type="text" size="2" class="card-expiry-month"/>
+                <label>Expiration ( MM / YY )</label>
+                <input id="EWAY_CARDMONTH"  name="EWAY_CARDMONTH" type="text" size="2" maxlength="2" class="card-expiry-month"/>
                 <span> / </span>
-                <input type="text" size="2" class="card-expiry-year" />
+                <input id="EWAY_CARDYEAR"  name="EWAY_CARDYEAR" type="text" size="2" maxlength="2" class="card-expiry-year" />
             </div>
-            <button type="submit" class="submit-button">Submit Payment</button>
+            <input type="submit" value="PAY" />
         </form>
     </div>
 </body>

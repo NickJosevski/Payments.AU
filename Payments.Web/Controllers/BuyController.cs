@@ -35,7 +35,7 @@ namespace Payments.Web.Controllers
                 InvoiceDescription = "Customer Created",
                 InvoiceNumber = Guid.NewGuid().ToString(),
                 InvoiceReference = Guid.NewGuid().ToString(),
-                TotalAmount = 4000
+                TotalAmount = DateTime.Now.Minute * 1000
             };
         }
 
@@ -43,7 +43,7 @@ namespace Payments.Web.Controllers
         // GET: /Buy/
         public ActionResult Index()
         {
-            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", false, _customer, _payment);
+            var result = _eway.CreateCustomerWithPaymentRequirement("http://localhost:51868/PaymentComplete/Good", true, _customer, _payment);
 
             if(String.IsNullOrWhiteSpace(result.AccessCode)) return View("Error");
 
@@ -56,7 +56,7 @@ namespace Payments.Web.Controllers
         // GET: /BasicForm/
         public ActionResult BasicForm()
         {
-            var result = _eway.CreateAndBillCustomer("http://localhost:51868/PaymentComplete/Good", true, _customer, _payment);
+            var result = _eway.CreateCustomerWithPaymentRequirement("http://localhost:51868/PaymentComplete/Good", true, _customer, _payment);
 
             if (String.IsNullOrWhiteSpace(result.AccessCode)) return View("Error");
 

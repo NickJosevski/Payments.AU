@@ -17,81 +17,46 @@
         <!-- to display errors returned by createToken -->
         <div style="background-color: lightblue"><h4>debug:</h4>
             <span class="payment-errors"></span>
+            <span class="card-errors"></span>
         </div>
-        <form action="" method="POST" id="payment-form">
+        <div id="payment-shell">
             <div class="form-row">
                 <label>Access Code (Hidden)</label>
-                <input type="text" size="160" autocomplete="off" class="access-code" value="@Model.AccessCode" />
+                <input type="text" size="50" autocomplete="off" class="eway-access-code" value="@Model.AccessCode" />
             </div>
             <div class="form-row">
                 <label>Card Name</label>
-                <input type="text" size="150" autocomplete="off" class="card-name" value="Test User" />
+                <input type="text" size="30" autocomplete="off" class="card-name" value="Test User" />
             </div>
             <div class="form-row">
                 <label>Card Number</label>
-                <input type="text" size="20" autocomplete="off" class="card-number" value="4444333322221111" />
+                <input type="text" size="20" maxlength="20" autocomplete="off" class="card-number" value="4444333322221111" />
             </div>
             <div class="form-row">
-                <label>CVN</label>
-                <input type="text" size="4" autocomplete="off" class="card-cvn" value="123" />
+                <label>CVC</label>
+                <input type="text" size="4" maxlength="4" autocomplete="off" class="card-cvc" value="123" />
             </div>
             <div class="form-row">
                 <label>Expiration (MM/YY)</label>
-                <input type="text" size="2" class="card-expiry-month" value="12"/>
+                <input type="text" size="2" maxlength="2" class="card-expiry-month" value="12"/>
                 <span> / </span>
-                <input type="text" size="2" class="card-expiry-year" value="14"/>
+                <input type="text" size="2" maxlength="2" class="card-expiry-year" value="12"/>
             </div>
-            <button type="submit" class="submit-button">Submit Payment</button>
-        </form>
+            <button id="payment-shell-submit" type="submit" class="submit-button">Submit Payment</button>
+        </div>
         
         <h3>iframe loads here:</h3>
-        <iframe id="internal-payment" src="~/Scripts/eway-payment.html"></iframe>
+        <iframe allow-same-origin allow-forms width="500" height="400" id="internal-payment" src="~/Scripts/eway-payment.html"></iframe>
     </body>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-    <script type="text/javascript" src="~/Scripts/eway.js"></script>
+    <script type="text/javascript" src="~/Scripts/PaymentGateWay.js"></script>
     <script>
-        //Runs after response from gateway
-        function ewayResponseHandler(status, response) {
-            alert('response came');
-            console.log('ewayResponseHandler status = ');
-            console.log(status);
-            console.log('ewayResponseHandler response = ');
-
-            if (response.error) {
-                // re-enable the submit button
-                $('.submit-button').removeAttr("disabled");
-                // show the errors on the form
-                $(".payment-errors").html(response.error.message);
-            } else {
-                var form$ = $("#payment-form");
-
-                // token contains id, last4, and card type
-                var token = response['id'];
-                // insert the token into the form so it gets submitted to the server
-                /*form$.append("<input type='hidden' name='stripeToken' value='" + token + "' />");
-                // and submit
-                form$.get(0).setAttribute('action', 'PaymentComplete');
-                form$.get(0).submit();*/
-
-                $('#information').text('payment is being processed, please wait...');
-
-                $.ajax({
-                    url: '/Billing/PaymentComplete',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: JSON.stringify(response),
-                    contentType: 'application/json; charset=utf-8',
-                    success: function(result) {
-                        console.log('done');
-                    },
-                });
-            }
-        };
         
 
         // Wire up the form to submit 
         $(document).ready(function () {
-            $("#payment-form").submit(function (event) {
+            
+            $("#payment-shell-submit").click(function () {
                 // disable the submit button to prevent repeated clicks
                 $('.submit-button').attr("disabled", "disabled");
                 // createToken returns immediately - the supplied callback submits the form if there are no errors
@@ -101,81 +66,80 @@
                     exp_month: $('.card-expiry-month').val(),
                     exp_year: $('.card-expiry-year').val()
                 }, stripeResponseHandler);*/
-                console.log('calling eWAY.processPayment');
+                var errorDisplay = $(".card-errors");
+                var errors = "";
+                
+                var valid = true;
+                if (!window.PaymentGateWay.validateCardNumber($('.card-number').val())) {
 
-                eWAY.processPayment({
-                    EWAY_ACCESSCODE: $('.access-code').val(),
-                    EWAY_CARDNAME: $('.card-name').val(),
-                    EWAY_CARDNUMBER: $('.card-number').val(),
-                    EWAY_CARDCVN: $('.card-cvc').val(),
-                    EWAY_CARDMONTH: $('.card-expiry-month').val(),
-                    EWAY_CARDYEAR: $('.card-expiry-year').val()
-                });
+                    errors = "Looks like you have mistyped your credit card number <br />";
+                    valid = false;
+                }
+                console.log('ex month = ' + $('.card-expiry-month').val());
+                console.log('ex year = ' + $('.card-expiry-year').val());
+                if (!window.PaymentGateWay.validateExpiry($('.card-expiry-month').val(), $('.card-expiry-year').val())) {
 
-                /*
-                EWAY_ACCESSCODE
-                EWAY_CARDNAME
-                EWAY_CARDNUMBER
-                EWAY_CARDMONTH
-                EWAY_CARDYEAR
-                EWAY_CARDCVN
-                */
+                    errors = errors + "Card expiry date is not correct <br />";
+                    valid = false;
+                }
+                if (!window.PaymentGateWay.validateCVC($('.card-cvc').val())) {
 
-                event.preventDefault();
-                return false; // submit from callback
+                    errors = errors + "Card CVC is not in the correct format needs to be 3 or 4 digits <br />";
+                    valid = false;
+                }
+
+                console.log('access code! !! ! ! != ' + $('.eway-access-code').val());
+                
+                if (valid) {
+                    window.PaymentGateWay.processPayment({
+                        ewayAccessCode: $('.eway-access-code').val(),
+                        cardName: $('.card-name').val(),
+                        cardNumber: $('.card-number').val(),
+                        cardCvc: $('.card-cvc').val(),
+                        cardMonth: $('.card-expiry-month').val(),
+                        cardYear: $('.card-expiry-year').val()
+                    });
+                }
+                else {
+                    errorDisplay.html(errors);
+                    console.log(errorDisplay);
+                    console.log(errors);
+                }
             });
         });
 
-        window.eWAY.processPayment = function (paymentDetails) {
-
-            /*if (!window.dojox.validate(paymentDetails.EWAY_CARDNUMBER)) {
-                alert("Invalid credit card!");
-                return;
-            }*/
-
-            /*$.post('https://au.ewaypayments.com/hotpotato/payment', paymentDetails,
-               function (data) {
-                   alert("Data Loaded: " + data);
-               });
-            
-            return;*/
-            
+        window.PaymentGateWay.processPayment = function (paymentDetails) {
             // NOTE: we're not breaching the http://en.wikipedia.org/wiki/Same_origin_policy with this iFrame
             
-            var paymentFrame = $("#internal-payment");
-            console.log('paymentFrame');
-            console.log(paymentFrame);
+            var nestedForm = $("#internal-payment").contents().find('form');
 
-            var nestedForm = $(paymentFrame.contents().find('form'));
-            console.log('nestedForm');
-            console.log(nestedForm);
+            // Copy all the card details to the form to send
+            nestedForm.find('.eway-access-code').val(paymentDetails.ewayAccessCode);
+            nestedForm.find('.card-name').val(paymentDetails.cardName);
+            nestedForm.find('.card-number').val(paymentDetails.cardNumber);
+            nestedForm.find('.card-cvc').val(paymentDetails.cardCvc);
+            nestedForm.find('.card-expiry-month').val(paymentDetails.cardMonth);
+            nestedForm.find('.card-expiry-year').val(paymentDetails.cardYear);
             
-            return;
+            // paranoid check, we've copied fields over to nested form, lets rebuild the details, and validate them as a group
+            var finalDetails =
+                {
+                    ewayAccessCode: nestedForm.find('.eway-access-code').val(),
+                    cardName: nestedForm.find('.card-name').val(),
+                    cardNumber: nestedForm.find('.card-number').val(),
+                    cardCvc: nestedForm.find('.card-cvc').val(),
+                    cardMonth: nestedForm.find('.card-expiry-month').val(),
+                    cardYear: nestedForm.find('.card-expiry-year').val()
+                };
             
-            $.ajax({
-                url: 'https://au.ewaypayments.com/hotpotato/payment',
-                type: 'POST',
-                dataType: 'jsonp',
-                
-                data: JSON.stringify(paymentDetails),
-
-                contentType: 'application/json; charset=utf-8',
-                //contentType: 'application/x-javascript',
-                
-                success: function (status, response) {
-                    $(".payment-errors").text('post to eway failed');
-                    console.log('done - submit to eWAY, next 2 lines; status, response');
-                    console.log(status);
-                    console.log(response);
-                    ewayResponseHandler(status, response);
-                },
-                error: function () {
-                    console.log('post to eWAY FAILED');
-                    $(".payment-errors").text('post to eway failed');
-                }
-            });
+            if (window.PaymentGateWay.isValidForEway(finalDetails)) {
+                // submit the iframe form
+                console.log('ok');
+                nestedForm.submit();
+            } else {
+                console.log('not ok');
+            }
         };
-
     </script>
 </html>
     

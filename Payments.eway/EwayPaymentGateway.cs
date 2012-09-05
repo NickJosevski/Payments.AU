@@ -21,11 +21,13 @@ namespace Payments.eway
         /// <summary>
         /// # STEP 1 -- From Guide
         /// </summary>
-        public EwayCustomerDetails CreateAndBillCustomer(string redirectUrl, bool redirect, EwayCustomerDetails customer, EwayPayment payment)
+        public EwayCustomerDetails CreateCustomerWithPaymentRequirement(string redirectUrl, bool redirect, EwayCustomerDetails customer, EwayPayment payment)
         {
             var mode = redirect ? ResponseMode.Redirect : ResponseMode.Return;
 
             if (string.IsNullOrWhiteSpace(redirectUrl)) throw new ArgumentNullException("redirectUrl", "eWAY requires a redirect url");
+
+            if (payment.TotalAmount <= 0) throw new ArgumentNullException("payment", "payment.TotalAmount requires a value larger than 0");
 
             var auth = GetAuthenticationFromConfiguration();
 
@@ -58,6 +60,7 @@ namespace Payments.eway
 
                 return new EwayCustomerDetails
                     {
+                        // Token will not exist yet
                         Token = response.Customer.TokenCustomerID.ToString(),
                         AccessCode = response.AccessCode
                     };
