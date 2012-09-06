@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="eWAY\RequestAccessCodeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Read.cs" />
     <Compile Include="SecurePay\SecurePayGatewayTests.cs" />
   </ItemGroup>
   <ItemGroup>
