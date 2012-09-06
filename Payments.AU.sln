@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payments.eway", "Payments.eway\Payments.eway.csproj", "{0358C1A1-A15F-483A-A928-84007A194660}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Payments.eway", "Tests.Payments.eway\Tests.Payments.eway.csproj", "{9616C276-4D4B-47D1-B8DD-D3A536DB3740}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Payments", "Tests.Payments\Tests.Payments.csproj", "{9616C276-4D4B-47D1-B8DD-D3A536DB3740}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payments.Web", "Payments.Web\Payments.Web.csproj", "{EEC160DE-87FF-4210-8FC1-57E32EDD2E2F}"
 EndProject

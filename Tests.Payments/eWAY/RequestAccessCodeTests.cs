@@ -9,7 +9,7 @@ using NUnit.Framework;
 using Payments.eway;
 using Payments.eway.RapidAPI;
 
-namespace Tests.Payments.eway
+namespace Tests.Payments.eWAY
 {
     [TestFixture]
     public class RequestAccessCodeTests
