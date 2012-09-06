@@ -1,11 +1,34 @@
-Payments.eWAY
+Payments.AU
 =============
 
-A very very basic eWAY .NET wrapper for gateway [eWAY.com.au]( http://www.eway.com.au/ )
+Some basic .NET based payment gateway logic for some providers in Australia.
+
+## Gateways
+
+### SecurePay 
+
+[SecurePay.com.au]( http://www.securepay.com.au/)
+
+### eWAY 
+
+[eWAY.com.au]( http://www.eway.com.au/ )
+ 
 
 
 
 ## Capabilities
+
+~~ section in progress
+
+
+## SecurePay Usage
+
+~~ section in progress
+
+
+## eWAY Usage
+
+WARNING: After getting most of this linked to eWAY it was discovered there isn't a clear way to re-use the token to simply bill the customer again via the RapidAPI.
 
 1. Uses RapidAPI from eWAY  
    - From eWay:
@@ -13,10 +36,6 @@ A very very basic eWAY .NET wrapper for gateway [eWAY.com.au]( http://www.eway.c
 directly to eWAY without it passing through the merchant’s server.*
 1. b   
 1. c
-
-
-
-## Usage
 
 ### Note:
  > *Refer to up to date eWAY documentation in case this information changes.*

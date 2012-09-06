@@ -5,7 +5,7 @@ window.PaymentGateWay.ewayResponseWait = function(iframe, onSuccess, onTimeout) 
 
     var checks = 1;
     
-    function wait() {
+    function checkForEwayRedirectBasedResult() {
         var response = iframe.contents().find("#eway-response");
         
         if (response.get(0)) {
@@ -13,16 +13,16 @@ window.PaymentGateWay.ewayResponseWait = function(iframe, onSuccess, onTimeout) 
             onSuccess(response);
             return;
         }
-        if (checks > 100) {
-            // waited 1 minute (100 * 600ms) nothing's happened, let user know
+        if (checks > 150) {
+            // waited 1.5 minutes (100 * 600ms) nothing's happened, let user know
             onTimeout();
             return;
         }
         checks++;
-        setTimeout(wait, 600);
+        setTimeout(checkForEwayRedirectBasedResult, 600);
     }
 
-    wait();
+    checkForEwayRedirectBasedResult();
 };
 
 window.PaymentGateWay.ewayPaymentSubmit = function (submit, errorDisplay, iframe, onSuccess, onTimeout) {
@@ -52,7 +52,7 @@ window.PaymentGateWay.ewayPaymentSubmit = function (submit, errorDisplay, iframe
     }
 
     if (valid) {
-        window.PaymentGateWay.processEWayPayment(iframe, {
+        window.PaymentGateWay.processEWayPayment(iframe, errorDisplay, {
             ewayAccessCode: $('.eway-access-code').val(),
             cardName: $('.card-name').val(),
             cardNumber: $('.card-number').val(),
@@ -69,7 +69,7 @@ window.PaymentGateWay.ewayPaymentSubmit = function (submit, errorDisplay, iframe
     }
 };
 
-window.PaymentGateWay.processEWayPayment = function (iframe, paymentDetails) {
+window.PaymentGateWay.processEWayPayment = function (iframe, errorDisplay, paymentDetails) {
     // NOTE: we're not breaching the http://en.wikipedia.org/wiki/Same_origin_policy with this iFrame
 
     var nestedForm = iframe.contents().find('form');
@@ -94,11 +94,9 @@ window.PaymentGateWay.processEWayPayment = function (iframe, paymentDetails) {
         };
 
     if (window.PaymentGateWay.isValidForEway(finalDetails)) {
-        // submit the iframe form
-        console.log('ok');
         nestedForm.submit();
     } else {
-        console.log('not ok');
+        errorDisplay.html("Second round of validating Credit Card details failed. The problem should have already been reported. If you see this message please contact us.");
     }
 };
 
@@ -114,6 +112,8 @@ window.PaymentGateWay.isValid = function (details) {
         && window.PaymentGateWay.validateCVC(details.cardCvc)
         && window.PaymentGateWay.validateExpiry(details.cardMonth, details.cardYear);
 };
+
+// card, luhn, cvc and expiry logic thanks to Stripe.com - https://js.stripe.com/v1/stripe-debug.js
 
 window.PaymentGateWay.validateCardNumber = function(num) {
     num = (num + '').replace(/\s+|-/g, '');
@@ -173,7 +173,7 @@ window.PaymentGateWay.validateExpiry = function (month, year) {
         return false;
     }
     if (year < 100) {
-        // 2 digit year
+        // 2 digit year - note a y2.1k bug ;)
         year = 2000 + parseInt(year, 10);
     }
     expiry = new Date(year, month);

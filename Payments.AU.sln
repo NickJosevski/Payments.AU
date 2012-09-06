@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{565D50
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payments.SecurePay", "Payments.SecurePay\Payments.SecurePay.csproj", "{52BE9903-4D02-463B-BFC4-5495B6E95C82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{EEC160DE-87FF-4210-8FC1-57E32EDD2E2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEC160DE-87FF-4210-8FC1-57E32EDD2E2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEC160DE-87FF-4210-8FC1-57E32EDD2E2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52BE9903-4D02-463B-BFC4-5495B6E95C82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52BE9903-4D02-463B-BFC4-5495B6E95C82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52BE9903-4D02-463B-BFC4-5495B6E95C82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52BE9903-4D02-463B-BFC4-5495B6E95C82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

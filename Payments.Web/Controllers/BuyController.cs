@@ -35,7 +35,7 @@ namespace Payments.Web.Controllers
                 InvoiceDescription = "Customer Created",
                 InvoiceNumber = Guid.NewGuid().ToString(),
                 InvoiceReference = Guid.NewGuid().ToString(),
-                TotalAmount = DateTime.Now.Minute * 1000
+                TotalAmount = DateTime.Now.Minute * 100
             };
         }
 

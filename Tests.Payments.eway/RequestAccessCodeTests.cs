@@ -69,7 +69,7 @@ namespace Tests.Payments.eway
 
         //[TestCase("AF9802EkhvFnYNhzOr5HWHrvGAp8PxIVKc4rb3RrzHFN8743hd5", "00")]
         //[TestCase("DOq0XSxG4PilMm501JxHVAFSYLO2UT72wBn25bIzz27345873df", "05")]
-        [TestCase("C3AB9uGyo6QusEpJk0oVOz-VEcyKxeCd0-iepdwO_PUJti6f3SwZvu-cfWmUxvaHs3E9yqf9_i1UYzYLN3ghHgisrBiCd7Gfdej0tWOQE3oOyWjlLB1IgHBFrAQ-krfE96mObKoOhjCgwEvwnZVDDyd7bsw==", "00")]
+        [TestCase("60CF3bTCf3YHuw0hAL9QQLw_xKAGhenB7LvGmtWRWLAZyx9KBFdMH92tLrYjDCbzaAuctXedJkLDMbz040wqwEVzHTSH3Y4GxLdzdwJToWaqF3VmJESjbTPP_nW4GE36QFd6By5_K3HI7ke8w6NHLh6r1zA==", "00")]
         //[TestCase("E1HEZyH7uC3ROFOQMV791FrWXarSiK9igYgKJ8m0qAAAoP22bjB")]
         //[TestCase("E2pHRUx0dP1cW2n1tb9dJOB21NzcPgZ4EBAro_w6wXYNmV1Oh3p")]
         //[TestCase("E3DD7Ci0UQqlBmO3xCPRd7g94BOAG0bgrez5sl28xnQsIVkXOND")]
@@ -115,5 +115,27 @@ namespace Tests.Payments.eway
             Console.WriteLine("Token: " + result.Token);
         }
 
+
+        [Test]
+        [Ignore("This is where things fell over")]
+        public void ChargeExistingCustomer()
+        {
+            // Arrange
+            var payment = new EwayPayment
+            {
+                InvoiceDescription = "Customer Paid Via Token",
+                InvoiceNumber = "IN" + DateTime.Now.ToString(),
+                InvoiceReference = "IR" + DateTime.Now.ToString(),
+                TotalAmount = 99900
+            };
+
+            // Act
+            // WANT TO JUST SEND A TOKEN AND AMOUNT...
+            var result = _eway.ChargeExistingCustomer("914393981870", payment);
+
+            // Assert
+            Console.WriteLine(result);
+            Assert.That(result.Length, Is.GreaterThan(3));
+        }
     }
 }
