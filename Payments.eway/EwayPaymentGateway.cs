@@ -1,6 +1,9 @@
 using System;
 using System.Configuration;
 using System.Globalization;
+using System.IO;
+using System.Net;
+using System.Text;
 
 using Payments.eway.RapidAPI;
 
@@ -93,6 +96,7 @@ namespace Payments.eway
             // Create a new instance of the RapidAPI service and send the request
             using (var service = new RapidAPISoapClient())
             {
+                
                 var response = service.GetAccessCodeResult(request);
 
                 if (string.Compare(response.ResponseCode, "00", true, CultureInfo.CurrentCulture) != 0)
@@ -101,26 +105,91 @@ namespace Payments.eway
                     throw new EwayPaymentException(msg);
                 }
 
-                return new EwayResponse
-                    {
-                        // Use the response object to display the details returned by eWAY
-                        AccessCode = response.AccessCode,
-                        AuthorisationCode = response.AuthorisationCode,
-                        BeagleScore = response.BeagleScore.HasValue ? response.BeagleScore.Value.ToString() : string.Empty,
-                        InvoiceNumber = response.InvoiceNumber,
-                        InvoiceReference = response.InvoiceReference,
-                        Option1 = response.Option1,
-                        Option2 = response.Option2,
-                        Option3 = response.Option3,
-                        ResponseCode = response.ResponseCode,
-                        ResponseMessage = response.ResponseMessage,
-
-                        TokenCustomerID = response.TokenCustomerID != null ? response.TokenCustomerID.ToString() : string.Empty,
-                        TotalAmount = response.TotalAmount != null ? response.TotalAmount.Value.ToString() : string.Empty,
-                        TransactionID = response.TransactionID != null ? response.TransactionID.Value.ToString() : string.Empty,
-                        TransactionStatus = response.TransactionStatus != null ? response.TransactionStatus.Value.ToString() : string.Empty,
-                    };
+                return CreateResponse(response);
             }
+        }
+
+        public string ChargeExistingCustomer(string token, EwayPayment payment)
+        {
+            var auth = GetAuthenticationFromConfiguration();
+
+            using (var service = new RapidAPISoapClient())
+            {
+                // When the SaveToken field is set to “true”, and the TokenCustomerID 
+                // field is empty, a new Token customer will be created once the payment has been submitted.
+                var response = service.CreateAccessCode(
+                        new CreateAccessCodeRequest
+                            {
+                                Authentication = auth,
+                                ResponseMode = ResponseMode.Return,
+                                RedirectUrl = "http://google.com/why-would-you-think-I-only-come-from-the-web",
+                                Customer = new Customer
+                                    {
+                                        TokenCustomerID = Int64.Parse(token)
+                                    },
+                                Payment =
+                                    new Payment
+                                        {
+                                            InvoiceDescription = payment.InvoiceDescription,
+                                            InvoiceNumber = payment.InvoiceNumber,
+                                            InvoiceReference = payment.InvoiceReference,
+                                            TotalAmount = payment.TotalAmount
+                                        }
+                            });
+
+                //return response.AccessCode;
+
+                var outcome = GetAccessCodeResult(response.AccessCode);
+
+                return outcome.ResponseMessage;
+            }
+        }
+
+        public string HttpPost(string uri, string parameters)
+        {
+            // parameters: name1=value1&name2=value2	
+            var webRequest = WebRequest.Create(uri);
+
+            webRequest.ContentType = "application/x-www-form-urlencoded";
+            webRequest.Method = "POST";
+            var bytes = Encoding.ASCII.GetBytes(parameters);
+
+            webRequest.ContentLength = bytes.Length;   //Count bytes to send
+
+            using (var stream = webRequest.GetRequestStream())
+            {
+                stream.Write(bytes, 0, bytes.Length); //Send it
+            }
+
+            using (var webResponse = webRequest.GetResponse())
+            {
+                var sr = new StreamReader(webResponse.GetResponseStream());
+
+                return sr.ReadToEnd().Trim();
+            }
+        } 
+
+        private EwayResponse CreateResponse(GetAccessCodeResultResponse response)
+        {
+            return new EwayResponse
+            {
+                // Use the response object to display the details returned by eWAY
+                AccessCode = response.AccessCode,
+                AuthorisationCode = response.AuthorisationCode,
+                BeagleScore = response.BeagleScore.HasValue ? response.BeagleScore.Value.ToString() : string.Empty,
+                InvoiceNumber = response.InvoiceNumber,
+                InvoiceReference = response.InvoiceReference,
+                Option1 = response.Option1,
+                Option2 = response.Option2,
+                Option3 = response.Option3,
+                ResponseCode = response.ResponseCode,
+                ResponseMessage = response.ResponseMessage,
+
+                TokenCustomerID = response.TokenCustomerID != null ? response.TokenCustomerID.ToString() : string.Empty,
+                TotalAmount = response.TotalAmount != null ? response.TotalAmount.Value.ToString() : string.Empty,
+                TransactionID = response.TransactionID != null ? response.TransactionID.Value.ToString() : string.Empty,
+                TransactionStatus = response.TransactionStatus != null ? response.TransactionStatus.Value.ToString() : string.Empty,
+            };
         }
 
         public class EwayPaymentException : Exception

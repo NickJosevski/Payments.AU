@@ -1,0 +1,81 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>SecurePayBuy</title>
+</head>
+    <body>
+        <h3>SecurePay - SecureFrame</h3>
+        <div>
+        
+            <form id="nested-payment-form" action="https://payment.securepay.com.au/test/v2/invoice" method="POST" >
+                
+                <div class="form-row">
+                    
+                    <label>bill_name (Hidden)</label> <!-- type="hidden" -->
+                    <input type="text" name="bill_name" value="transact">
+                    
+                    <label>merchant_id(Hidden)</label> <!-- type="hidden" -->
+                    <input type="text" name="merchant_id" value="ABC0010">
+                    
+                    <input type="text" name="primary_ref" value="Test Reference">
+                    
+                </div>
+                <div class="form-row">
+                    <input type="text" name="txn_type" value="0">
+
+                    <input type="text" name="amount" value="100">
+
+                    <input type="text" name="fp_timestamp" value="20110616221931">
+                </div>
+                <div class="form-row">
+                    
+                    <!-- this is a SHA1 hash of the above fields -->
+                    <input type="text" name="fingerprint" value="697e7f7a26b709f39e7251dc6800a2a165621227">
+                </div>
+
+                <div class="form-row">
+                    <input type="text" name="display_receipt" value="no">
+                    <input type="text" name="return_url" value="http://localhost:51868/PaymentComplete/SecurePayGood">
+                    
+                    <input type="text" name="return_url_text" value="Thanks from Picnic :)">
+                    <input type="text" name="return_url_target" value="parent">
+                    
+                    <input type="text" name="callback_url" value="http://localhost:51868/PaymentComplete/SecurePayGood">
+                    
+                    <input type="text" name="primary_ref" value="123456">
+                    
+                </div>
+                <div class="form-row">
+                    <input type="text" name="store" value="yes">
+                    <input type="text" name="store_type" value="payor">
+                    <input type="text" name="payor" value="MyCustomer">
+                    
+
+                </div>
+                <div class="form-row">
+                    <label>Card Type</label>
+                    <input id="cardtype" name="cardtype" type="text" maxlength="150" size="30"  autocomplete="off" class="card-name" value="VISA"/>
+                </div>
+                <div class="form-row">
+                    <label>Card Number</label>
+                    <input id="cardnumber" name="cardnumber" type="text" maxlength="20" size="20" autocomplete="off" class="card-number" value ="4444333322221111"/>
+                </div>
+                <div class="form-row">
+                    <label>CCV</label>
+                    <input id="ccv" name="ccv" type="text" maxlength="4" size="4" autocomplete="off" class="card-cvc" value="123" />
+                </div>
+                <div class="form-row">
+                    <label>Expiration ( MM/YY )</label>
+                    <input id="expirydate" name="expirydate" type="text" size="5" maxlength="5" class="card-expiry" value="12/14"/>
+                </div>
+                <input type="submit" value="PAY" />
+            </form>
+        </div>
+    </body>
+</html>

@@ -108,6 +108,7 @@
   <ItemGroup>
     <Compile Include="Controllers\BuyController.cs" />
     <Compile Include="Controllers\PaymentCompleteController.cs" />
+    <Compile Include="Controllers\SecurePayController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -120,7 +121,6 @@
     <Content Include="Global.asax" />
     <Content Include="Scripts\eway-payment.html" />
     <Content Include="Scripts\PaymentGateWay.js" />
-    <Content Include="Views\Buy\eway-payment.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -154,6 +154,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Buy\Error.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\SecurePay\SecurePayBuy.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
