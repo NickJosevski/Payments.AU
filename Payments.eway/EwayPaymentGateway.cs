@@ -153,35 +153,21 @@ namespace Payments.eway
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Method = "POST";
             var bytes = Encoding.ASCII.GetBytes(parameters);
-            try
-            { // send the Post
-                webRequest.ContentLength = bytes.Length;   //Count bytes to send
 
-                using (var stream = webRequest.GetRequestStream())
-                {
-                    stream.Write(bytes, 0, bytes.Length); //Send it
-                }
-            }
-            catch (WebException ex)
+            webRequest.ContentLength = bytes.Length;   //Count bytes to send
+
+            using (var stream = webRequest.GetRequestStream())
             {
-                throw;
+                stream.Write(bytes, 0, bytes.Length); //Send it
             }
 
-
-            try
-            { // get the response
-                using (var webResponse = webRequest.GetResponse())
-                {
-                    var sr = new StreamReader(webResponse.GetResponseStream());
-
-                    return sr.ReadToEnd().Trim();
-                }
-            }
-            catch (WebException ex)
+            using (var webResponse = webRequest.GetResponse())
             {
-                throw;
+                var sr = new StreamReader(webResponse.GetResponseStream());
+
+                return sr.ReadToEnd().Trim();
             }
-        } // end HttpPost 
+        } 
 
         private EwayResponse CreateResponse(GetAccessCodeResultResponse response)
         {

@@ -29,7 +29,7 @@ namespace Payments.Web.Controllers
             return View(new PaymentResposnse { Message = msg, Code = result.ResponseMessage, Token = result.TokenCustomerID });
         }
 
-        public void SecurePayGood(object response)
+        public void SecurePayGood(string response)
         {
             var t = response;
 
