@@ -26,6 +26,24 @@ Some basic .NET based payment gateway logic for some providers in Australia.
 ~~ section in progress
 
 
+The Fingerprint is a protected record of the amount to be paid. It must be generated and then included as an input field to SecureFrame. It prevents a customer modifying the transaction details when submitting their card information.
+
+Fingerprint security is used at two points within the end to end payment process.
+
+ - You will need to generate the request Fingerprint and include the value in the payment request submitted to SecurePay (see below on how to generate the fingerprint)
+ - SecurePay will return a result Fingerprint using the Callback or Return url’s.
+
+
+The Fingerprint is a SHA1 hash of the above mandatory fields, plus the SecurePay Transaction Password in this order with a pipe separator “|”:
+
+ - “merchant_id”
+ - Transaction Password (supplied by SecurePay Support)
+ - “txn_type”
+ - “primary_ref”
+ - “amount”
+ - “fp_timestamp”
+
+
 ## eWAY Usage
 
 WARNING: After getting most of this linked to eWAY it was discovered there isn't a clear way to re-use the token to simply bill the customer again via the RapidAPI.

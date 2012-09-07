@@ -6,22 +6,94 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Payments.SecurePay
 {
+    public enum ActionType
+    {
+        // Must be lowercase
+        add,
+        trigger,
+        delete
+    }
+
     public class SecurePayGateway
     {
-        public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
         //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
-        //public const string SecurePay = "https://test.securepay.com.au/xmlapi/payment";
+        //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
+        public string ApiEndpoint = "https://test.securepay.com.au/xmlapi/payment";
 
-        public string ChargeCustomer(CardInfo card, string requestMessage/*remove this param we will construct it*/)
+        public SecurePayGateway()
         {
-            return HttpPost(SecurePay, requestMessage);
+        }
+
+        public SecurePayGateway(string url)
+        {
+            ApiEndpoint = url;
+        }
+
+        /// <summary>
+        /// Test Method, where message is crafted externally (i.e. unit tests).
+        /// </summary>
+        /// <param name="requestMessage"></param>
+        /// <returns></returns>
+        public string SendMessage(string requestMessage)
+        {
+            return HttpPost(ApiEndpoint, requestMessage);
+        }
+
+        public bool CreateCustomerWithCharge(CardInfo card)
+        {
+            var request = PeriodicPaymentXml(ActionType.trigger.ToString(), GetClientId());
+                
+            var response = HttpPost(ApiEndpoint, request);
+
+            return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
+
+        }
+
+        public static string PeriodicPaymentXml(string actionType, string customerId)
+        {
+            return new XDocument(
+                new XDeclaration("1.0", "utf-8", "no"),
+                new XElement("SecurePayMessage",
+                    new XElement("MessageInfo",
+                        new XElement("messageID", "757a5be5b84b4d8ab84ec03ebd24af"),
+                        new XElement("messageTimestamp", GetTimeStamp(DateTime.Now)),
+                        new XElement("timeoutValue", "6"),
+                        new XElement("apiVersion", "spxml-3.0")), // NOTE <--DIFF
+                    new XElement("MerchantInfo",
+                        new XElement("merchantID", "ABC0001"),
+                        new XElement("password", "abc123")),
+                    new XElement("RequestType", "Periodic"), // NOTE <--DIFF
+                    new XElement("Periodic",
+                        new XElement("PeriodicList", new XAttribute("count", "1"),
+                            new XElement("PeriodicItem", new XAttribute("ID", "1"),
+                                new XElement("actionType", actionType),
+                                new XElement("clientID", customerId),
+                                    new XElement("CreditCardInfo",
+                                        new XElement("cardNumber", "4444333322221111"),
+                                        new XElement("expiryDate", "10/15")),
+                                    new XElement("amount", "133600"),
+                                    new XElement("currency", "AUD"),
+                                    new XElement("periodicType", "4") // << Triggered Payment
+                                    ))))).ToStringWithDeclaration();
+        }
+
+        public static string GetTimeStamp(DateTime timeStamp)
+        {
+            const string Format = "{0:yyyy}{0:dd}{0:MM}{0:hh}{0:mm}{0:ss}{0:fff}000{1}{2:000}";
+
+            var offset = TimeZone.CurrentTimeZone.GetUtcOffset(timeStamp);
+            var sign = offset.TotalMinutes > 0 ? "+" : "-";
+
+            return String.Format(Format, timeStamp, sign, offset.TotalMinutes);
         }
 
         public string HttpPost(string uri, string message)
         {
+            ApiDebug(uri);
             var request = (HttpWebRequest)WebRequest.Create(uri);
 
             request.Method = "POST";
@@ -43,6 +115,15 @@ namespace Payments.SecurePay
                 return reader.ReadToEnd().Trim();
             }
         } 
+
+        public void ApiDebug(string msg)
+        {
+            Console.WriteLine("");
+            Console.WriteLine("####   ####   ####   ####");
+            Console.WriteLine("communicating via:[{0}]", msg);
+            Console.WriteLine("####   ####   ####   ####");
+            Console.WriteLine("");
+        }
 
         public static string Sha1SecurePayDetails(string merchantId, string transxPassword, string transxType, string primaryRef, int amount, DateTime timestamp)
         {
@@ -72,6 +153,39 @@ namespace Payments.SecurePay
 
             return hex.Replace("-", "");
         }
+
+        public static string GetClientId()
+        {
+            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 20);
+        }
+    }
+
+    public static class XmlHelpers
+    {
+        public static string ToStringWithDeclaration(this XDocument doc)
+        {
+            if (doc == null)
+            {
+                throw new ArgumentNullException("doc");
+            }
+            var builder = new StringBuilder();
+            using (var writer = new Utf8StringWriter(builder))
+            {
+                doc.Save(writer);
+            }
+            return builder.ToString();
+        }
+    }
+
+    public sealed class Utf8StringWriter : StringWriter
+    {
+        public Utf8StringWriter()
+        { }
+
+        public Utf8StringWriter(StringBuilder sb)
+            : base(sb) { }
+
+        public override Encoding Encoding { get { return Encoding.UTF8; } }
     }
 
     public class CardInfo
