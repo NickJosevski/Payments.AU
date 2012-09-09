@@ -43,17 +43,26 @@ namespace Payments.SecurePay
             return HttpPost(ApiEndpoint, requestMessage);
         }
 
-        public bool CreateCustomerWithCharge(CardInfo card)
+        public bool SingleCharge(CardInfo card, decimal amount, string referenceId)
         {
-            var request = PeriodicPaymentXml(ActionType.trigger.ToString(), GetClientId());
-                
-            var response = HttpPost(ApiEndpoint, request);
+            var request = SinglePaymentXml(card, amount.ToCents(), referenceId);
+
+            var response = SendMessage(request);
+
+            return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
+        }
+
+        public bool CreateCustomerWithCharge(CardInfo card, decimal amount)
+        {
+            var request = PeriodicPaymentXml(card, ActionType.trigger.ToString(), GetClientId(), amount.ToCents());
+
+            var response = SendMessage(request);
 
             return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
 
         }
 
-        public static string PeriodicPaymentXml(string actionType, string customerId)
+        public static string PeriodicPaymentXml(CardInfo card, string actionType, string customerId, int amount)
         {
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
@@ -73,12 +82,38 @@ namespace Payments.SecurePay
                                 new XElement("actionType", actionType),
                                 new XElement("clientID", customerId),
                                     new XElement("CreditCardInfo",
-                                        new XElement("cardNumber", "4444333322221111"),
-                                        new XElement("expiryDate", "10/15")),
-                                    new XElement("amount", "133600"),
+                                        new XElement("cardNumber", card.Number),
+                                        new XElement("expiryDate", card.Expiry)),
+                                    new XElement("amount", amount),
                                     new XElement("currency", "AUD"),
                                     new XElement("periodicType", "4") // << Triggered Payment
                                     ))))).ToStringWithDeclaration();
+        }
+
+        public static string SinglePaymentXml(CardInfo card, int amount, string purchaseOrderNo)
+        {
+            return new XDocument(
+                new XDeclaration("1.0", "utf-8", "no"),
+                new XElement("SecurePayMessage",
+                    new XElement("MessageInfo",
+                        new XElement("messageID", "757a5be5b84b4d8ab84ec03ebd24af"),
+                        new XElement("messageTimestamp", GetTimeStamp(DateTime.Now)),
+                        new XElement("timeoutValue", "30"),
+                        new XElement("apiVersion", "xml-4.2")),
+                    new XElement("MerchantInfo",
+                        new XElement("merchantID", "ABC0001"),
+                        new XElement("password", "abc123")),
+                    new XElement("RequestType", "Payment"),
+                    new XElement("Payment",
+                        new XElement("TxnList", new XAttribute("count", "1"),
+                            new XElement("Txn", new XAttribute("ID", "1"),
+                                new XElement("txnType", "0"),
+                                new XElement("txnSource", "0"),
+                                new XElement("amount", amount),
+                                new XElement("purchaseOrderNo", purchaseOrderNo),
+                                    new XElement("CreditCardInfo",
+                                        new XElement("cardNumber", card.Number),
+                                        new XElement("expiryDate", card.Expiry))))))).ToStringWithDeclaration();
         }
 
         public static string GetTimeStamp(DateTime timeStamp)
@@ -188,8 +223,11 @@ namespace Payments.SecurePay
         public override Encoding Encoding { get { return Encoding.UTF8; } }
     }
 
-    public class CardInfo
+    public static class NumericExtensions
     {
-        
+        public static int ToCents(this decimal amount)
+        {
+            return (int)(Math.Round(amount, 2) * 100);
+        }
     }
 }

@@ -16,14 +16,21 @@ namespace Tests.Payments.SecurePay
     [TestFixture]
     public class SecurePayGatewayTests
     {
-        private int _chargeAmount;
+        private string _chargeAmount1;
+        private string _chargeAmount2;
+
+        private CardInfo _card;
 
         [TestFixtureSetUp]
         public void Fixture()
         {
-            _chargeAmount = Int32.Parse(ReadFromFile(@"..\..\increasing-amount.txt").Trim());
-            _chargeAmount++;
-            WriteToFile(@"..\..\increasing-amount.txt", _chargeAmount);
+            var amount = Int32.Parse(ReadFromFile(@"..\..\increasing-amount.txt").Trim());
+            _chargeAmount1 = (amount * 100).ToString();
+            amount++;
+            _chargeAmount2 = (amount * 100).ToString();
+            WriteToFile(@"..\..\increasing-amount.txt", amount);
+
+            _card = new CardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }
 
 
@@ -55,6 +62,7 @@ namespace Tests.Payments.SecurePay
         public const string ApiPayment = "https://test.securepay.com.au/xmlapi/payment";
 
         [Test]
+        [Ignore("file read write set up")]
         public void CanIncrementFileOnEachMainRun()
         {
             // Arrange
@@ -75,33 +83,7 @@ namespace Tests.Payments.SecurePay
         4 Triggered Payment
         */
 
-        private string RegularPaymentXml()
-        {
-            return new XDocument(
-                new XDeclaration("1.0", "utf-8", "no"),
-                new XElement("SecurePayMessage",
-                    new XElement("MessageInfo",
-                        new XElement("messageID", "757a5be5b84b4d8ab84ec03ebd24af"),
-                        new XElement("messageTimestamp", SecurePayGateway.GetTimeStamp(DateTime.Now)),
-                        new XElement("timeoutValue", "30"),
-                        new XElement("apiVersion", "xml-4.2")),
-                    new XElement("MerchantInfo",
-                        new XElement("merchantID", "ABC0001"),
-                        new XElement("password", "abc123")),
-                    new XElement("RequestType", "Payment"),
-                    new XElement("Payment",
-                        new XElement("TxnList", new XAttribute("count", "1"),
-                            new XElement("Txn", new XAttribute("ID", "1"),
-                                new XElement("txnType", "0"),
-                                new XElement("txnSource", "0"),
-                                new XElement("amount", "133700"),
-                                new XElement("purchaseOrderNo", "MountFranklin"),
-                                    new XElement("CreditCardInfo",
-                                        new XElement("cardNumber", "4444333322221111"),
-                                        new XElement("expiryDate", "10/15"))))))).ToStringWithDeclaration();
-        }
-
-        private string BuildXmlFrom(SecurePayMessage securePayRequest)
+        /*private string BuildXmlFrom(SecurePayMessage securePayRequest)
         {
             using (var s = new Utf8StringWriter())
             {
@@ -116,15 +98,15 @@ namespace Tests.Payments.SecurePay
                 new XmlSerializer(typeof(SecurePayMessage), "").Serialize(s, foo);
                 return s.ToString();
             }
-        }
+        }*/
 
         [Test]
-        public void SecurePayGateway_RegularPayemt()
+        public void SecurePayGateway_OneOffPayemt()
         {
-            SendingDebug(RegularPaymentXml());
+            var oneOffPayment = SecurePayGateway.SinglePaymentXml(_card, _chargeAmount1, "OneOffInc");
+            SendingDebug(oneOffPayment);
 
-            var r = new SecurePayGateway(ApiPayment)
-                .SendMessage(RegularPaymentXml());
+            var r = new SecurePayGateway(ApiPayment).SendMessage(oneOffPayment);
 
             // Assert
             Console.WriteLine(PrintXml(r));
@@ -137,7 +119,7 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_1Setup_2Charge()
         {
             var id = SecurePayGateway.GetClientId();
-            var request = SecurePayGateway.PeriodicPaymentXml("add", id);
+            var request = SecurePayGateway.PeriodicPaymentXml("add", id, _chargeAmount2);
             SendingDebug(request);
 
             var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -149,7 +131,7 @@ namespace Tests.Payments.SecurePay
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
 
-            request = SecurePayGateway.PeriodicPaymentXml("trigger", id);
+            request = SecurePayGateway.PeriodicPaymentXml("trigger", id, _chargeAmount2);
             SendingDebug(request);
 
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -165,7 +147,7 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist()
         {
-            var request = SecurePayGateway.PeriodicPaymentXml("add", SecurePayGateway.GetClientId());
+            var request = SecurePayGateway.PeriodicPaymentXml("add", SecurePayGateway.GetClientId(), _chargeAmount2);
             SendingDebug(request);
 
             var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -178,7 +160,7 @@ namespace Tests.Payments.SecurePay
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
 
             // NOTE: new id, so won't find customer
-            request = SecurePayGateway.PeriodicPaymentXml("trigger", SecurePayGateway.GetClientId());
+            request = SecurePayGateway.PeriodicPaymentXml("trigger", SecurePayGateway.GetClientId(), _chargeAmount2);
             SendingDebug(request);
 
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -233,7 +215,7 @@ namespace Tests.Payments.SecurePay
     </Payment>
 </SecurePayMessage>";
 
-            var r = SecurePayGateway.PeriodicPaymentXml("add", SecurePayGateway.GetClientId());
+            var r = SecurePayGateway.PeriodicPaymentXml("add", SecurePayGateway.GetClientId(), _chargeAmount2);
 
             Console.WriteLine(PrintXml(r));
             Assert.That(r, Is.StringContaining(@"<TxnList count=""1"""));
@@ -295,7 +277,6 @@ namespace Tests.Payments.SecurePay
                 return sReader.ReadToEnd();
             }
         }
-
 
         //very temporary way to send the message will build this up propery asap
         public string requestMessage =
