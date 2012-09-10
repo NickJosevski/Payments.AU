@@ -10,4 +10,11 @@ namespace Payments.SecurePay
 
         public string Expiry { get; set; }
     }
+
+    public class Payment
+    {
+        public decimal Amount { get; set; }
+
+        public string Currency { get; set; }
+    }
 }

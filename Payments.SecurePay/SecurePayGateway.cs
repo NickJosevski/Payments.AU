@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,14 +19,44 @@ namespace Payments.SecurePay
         delete
     }
 
+    public static class StringExtensions
+    {
+        public static SecureString ToSecureString(this string src)
+        {
+            var secure = new SecureString();
+
+            src.ToCharArray().ToList().ForEach(secure.AppendChar);
+
+            return secure;
+        }
+    }
+
     public class SecurePayGateway
     {
+        private int _connectionTimeoutSeconds;
+
+        private readonly string _merchantId;
+
+        private readonly string _password;
+
         //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
         //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
         public string ApiEndpoint = "https://test.securepay.com.au/xmlapi/payment";
 
         public SecurePayGateway()
         {
+            //TODO: get from configuration / secure location
+            _merchantId = "ABC0001";
+            _password = "abc123";
+            _connectionTimeoutSeconds = 30;
+        }
+
+        public SecurePayGateway(string merchantId, string merchantPassword)
+        {
+            //TODO: get from configuration / secure location
+            _merchantId = merchantId;
+            _password = merchantPassword;
+            _connectionTimeoutSeconds = 30;
         }
 
         public SecurePayGateway(string url)
@@ -52,42 +83,84 @@ namespace Payments.SecurePay
             return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
         }
 
-        public bool CreateCustomerWithCharge(CardInfo card, decimal amount)
+        public bool CreateCustomerWithCharge(string clientId, CardInfo card, Payment payment)
         {
-            var request = PeriodicPaymentXml(card, ActionType.trigger.ToString(), GetClientId(), amount.ToCents());
+            var request = CreatePeriodicPaymentXml(card, clientId, payment);
 
             var response = SendMessage(request);
 
             return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
-
         }
 
-        public static string PeriodicPaymentXml(CardInfo card, string actionType, string customerId, int amount)
+        public bool ChargeExistingCustomer(string clientId, Payment payment)
         {
+            var request = TriggerPeriodicPaymentXml(clientId, payment);
+
+            var response = SendMessage(request);
+
+            return response.Contains("<statusCode>0") && response.Contains("<statusDescription>Normal");
+        }
+
+        public string CreatePeriodicPaymentXml(CardInfo card, string customerId, Payment payment)
+        {
+            ValidatePayment(payment);
+
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
                 new XElement("SecurePayMessage",
                     new XElement("MessageInfo",
-                        new XElement("messageID", "757a5be5b84b4d8ab84ec03ebd24af"),
+                        new XElement("messageID", CreateMessageId()),
                         new XElement("messageTimestamp", GetTimeStamp(DateTime.Now)),
-                        new XElement("timeoutValue", "6"),
-                        new XElement("apiVersion", "spxml-3.0")), // NOTE <--DIFF
+                        new XElement("timeoutValue", _connectionTimeoutSeconds),
+                        new XElement("apiVersion", "spxml-3.0")), // NOTE <-- Different to Single payments
                     new XElement("MerchantInfo",
-                        new XElement("merchantID", "ABC0001"),
-                        new XElement("password", "abc123")),
+                        new XElement("merchantID", _merchantId),
+                        new XElement("password", _password)),
                     new XElement("RequestType", "Periodic"), // NOTE <--DIFF
                     new XElement("Periodic",
                         new XElement("PeriodicList", new XAttribute("count", "1"),
                             new XElement("PeriodicItem", new XAttribute("ID", "1"),
-                                new XElement("actionType", actionType),
+                                new XElement("actionType", "add"),
                                 new XElement("clientID", customerId),
                                     new XElement("CreditCardInfo",
                                         new XElement("cardNumber", card.Number),
                                         new XElement("expiryDate", card.Expiry)),
-                                    new XElement("amount", amount),
-                                    new XElement("currency", "AUD"),
+                                    new XElement("amount", payment.Amount.ToCents()),
+                                    new XElement("currency", payment.Currency.ToUpper()),
                                     new XElement("periodicType", "4") // << Triggered Payment
                                     ))))).ToStringWithDeclaration();
+        }
+
+        public string TriggerPeriodicPaymentXml(string customerId, Payment payment)
+        {
+            ValidatePayment(payment);
+
+            return new XDocument(
+                new XDeclaration("1.0", "utf-8", "no"),
+                new XElement("SecurePayMessage",
+                    new XElement("MessageInfo",
+                        new XElement("messageID", CreateMessageId()),
+                        new XElement("messageTimestamp", GetTimeStamp(DateTime.Now)),
+                        new XElement("timeoutValue", _connectionTimeoutSeconds),
+                        new XElement("apiVersion", "spxml-3.0")), // NOTE <-- Different to Single payments
+                    new XElement("MerchantInfo",
+                        new XElement("merchantID", _merchantId),
+                        new XElement("password", _password)),
+                    new XElement("RequestType", "Periodic"), // NOTE <--DIFF
+                    new XElement("Periodic",
+                        new XElement("PeriodicList", new XAttribute("count", "1"),
+                            new XElement("PeriodicItem", new XAttribute("ID", "1"),
+                                new XElement("actionType", "trigger"),
+                                new XElement("clientID", customerId),
+                                    new XElement("amount", payment.Amount.ToCents()),
+                                    new XElement("currency", payment.Currency.ToUpper()),
+                                    new XElement("periodicType", "4") // << Triggered Payment
+                                    ))))).ToStringWithDeclaration();
+        }
+
+        public static string CreateMessageId()
+        {
+            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 30);
         }
 
         public static string SinglePaymentXml(CardInfo card, int amount, string purchaseOrderNo)
@@ -149,7 +222,20 @@ namespace Payments.SecurePay
             {
                 return reader.ReadToEnd().Trim();
             }
-        } 
+        }
+
+        private void ValidatePayment(Payment payment)
+        {
+            if (payment.Amount <= 0)
+            {
+                throw new ArgumentException("payment.Amount was zero or negative", "payment");
+            }
+
+            if (string.IsNullOrWhiteSpace(payment.Currency) || payment.Currency.Length > 3)
+            {
+                throw new ArgumentException("payment.Currency is not valid", "payment");
+            }
+        }
 
         public void ApiDebug(string msg)
         {

@@ -17,19 +17,23 @@ namespace Tests.Payments.SecurePay
     public class SecurePayGatewayTests
     {
         private int _chargeAmount1;
+
         private int _chargeAmount2;
 
         private CardInfo _card;
+
+        private SecurePayGateway _gateway;
 
         [TestFixtureSetUp]
         public void Fixture()
         {
             var currentVal = Int32.Parse(ReadFromFile(@"..\..\increasing-amount.txt").Trim());
 
-            _chargeAmount1 = currentVal * 100;
-            _chargeAmount2 = _chargeAmount1 + 100;
+            _chargeAmount2 = currentVal + 1;
 
             WriteToFile(@"..\..\increasing-amount.txt", currentVal + 1);
+
+            _gateway = new SecurePayGateway();
 
             _card = new CardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }
@@ -37,7 +41,8 @@ namespace Tests.Payments.SecurePay
         public string ReadFromFile(string filePath)
         {
             if (!File.Exists(filePath))
-                throw new InvalidOperationException("ReadFromFile() - Unable to find " + Environment.CurrentDirectory + @"\" + filePath);
+                throw new InvalidOperationException(
+                    "ReadFromFile() - Unable to find " + Environment.CurrentDirectory + @"\" + filePath);
 
             using (var reader = new StreamReader(File.OpenRead(filePath)))
             {
@@ -48,7 +53,8 @@ namespace Tests.Payments.SecurePay
         public void WriteToFile(string filePath, int amount)
         {
             if (!File.Exists(filePath))
-                throw new InvalidOperationException("WriteToFile() - Unable to find " + Environment.CurrentDirectory + @"\" + filePath);
+                throw new InvalidOperationException(
+                    "WriteToFile() - Unable to find " + Environment.CurrentDirectory + @"\" + filePath);
 
             using (var writer = new StreamWriter(filePath, false))
             {
@@ -57,8 +63,9 @@ namespace Tests.Payments.SecurePay
         }
 
         public static string ApiInvoice = "https://payment.securepay.com.au/test/v2/invoice";
-        
+
         public const string ApiPeriodic = "https://test.securepay.com.au/xmlapi/periodic";
+
         public const string ApiPayment = "https://test.securepay.com.au/xmlapi/payment";
 
         [Test]
@@ -66,7 +73,7 @@ namespace Tests.Payments.SecurePay
         public void CanIncrementFileOnEachMainRun()
         {
             // Arrange
-            
+
             // Act
             var currentResult = Int32.Parse(ReadFromFile(@"..\..\increasing-amount.txt").Trim());
 
@@ -96,13 +103,15 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
         }
 
         [Test]
-        public void SecurePayGateway_PeriodicCharge_1Setup_2Charge()
+        public void SecurePayGateway_PeriodicCharge_Setup_Then_Charge()
         {
+            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
-            var request = SecurePayGateway.PeriodicPaymentXml(_card, "add", id, _chargeAmount2);
+            var request = _gateway.CreatePeriodicPaymentXml(_card, id, p);
             SendingDebug(request);
 
             var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -113,8 +122,9 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
 
-            request = SecurePayGateway.PeriodicPaymentXml(_card, "trigger", id, _chargeAmount2);
+            request = _gateway.TriggerPeriodicPaymentXml(id, p);
             SendingDebug(request);
 
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -125,29 +135,32 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
         }
 
         [Test]
-        public void SecurePayGateway_PeriodicCharge_1Setup_2Charge_3rdChargeDiffValue()
+        public void SecurePayGateway_PeriodicCharge_Setup_Charge1stTime_Charge2ndTimeDiffValue()
         {
             var id = SecurePayGateway.GetClientId();
-            var request = SecurePayGateway.PeriodicPaymentXml(_card, "add", id, _chargeAmount2);
+            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var request = _gateway.CreatePeriodicPaymentXml(_card, id, p);
+            SendingDebug(request);
+
+            // Charge Setup
+            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+
+            // Assert
+            Console.WriteLine("First Response");
+            Console.WriteLine(PrintXml(r));
+
+            Assert.IsNotNullOrEmpty(r);
+            Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
+
+            request = _gateway.TriggerPeriodicPaymentXml(id, p);
             SendingDebug(request);
 
             // Charge 1
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
-
-            // Assert
-            Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
-
-            Assert.IsNotNullOrEmpty(r);
-            Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
-
-            request = SecurePayGateway.PeriodicPaymentXml(_card, "trigger", id, _chargeAmount2);
-            SendingDebug(request);
-
-            // Charge 2
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
 
             // Assert
@@ -156,9 +169,11 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
 
-            // Charge 3
-            request = SecurePayGateway.PeriodicPaymentXml(_card, "trigger", id, _chargeAmount2 + 1000);
+            // Charge 2
+            p.Amount += 100;
+            request = _gateway.TriggerPeriodicPaymentXml(id, p);
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
 
             // Assert
@@ -167,12 +182,14 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
         }
 
         [Test]
         public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist()
         {
-            var request = SecurePayGateway.PeriodicPaymentXml(_card, "add", SecurePayGateway.GetClientId(), _chargeAmount2);
+            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var request = _gateway.CreatePeriodicPaymentXml(_card, SecurePayGateway.GetClientId(), p);
             SendingDebug(request);
 
             var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -183,9 +200,11 @@ namespace Tests.Payments.SecurePay
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r, Is.StringContaining("<statusCode>0"));
+            
 
             // NOTE: new id, so won't find customer
-            request = SecurePayGateway.PeriodicPaymentXml(_card, "trigger", SecurePayGateway.GetClientId(), _chargeAmount2);
+            request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.GetClientId(), p);
             SendingDebug(request);
 
             r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
@@ -201,36 +220,8 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void Test_BuildViaXdoc()
         {
-            var expected = @"<?xml version=""1.0"" encoding=""UTF-8""?>
-<SecurePayMessage>
-    <MessageInfo>
-        <messageID>757a5be5b84b4d8ab84ec03ebd24af</messageID>
-        <messageTimestamp>20120709110813287000+600</messageTimestamp>
-        <timeoutValue>6</timeoutValue>
-        <apiVersion>xml-4.2</apiVersion>
-    </MessageInfo>
-    <MerchantInfo>
-        <merchantID>ABC0001</merchantID>
-        <password>abc123</password>
-    </MerchantInfo>
-    <RequestType>Periodic</RequestType>
-    <Payment>
-      <TxnList count=""1"">
-       <Txn ID=""1"">
-        <txnType>0</txnType>
-        <txnSource>0</txnSource>
-        <amount>133700</amount>
-        <purchaseOrderNo>MountFranklin</purchaseOrderNo>
-        <CreditCardInfo>
-                <cardNumber>4444333322221111</cardNumber>
-                <expiryDate>10/15</expiryDate>
-        </CreditCardInfo>
-       </Txn>
-      </TxnList>
-    </Payment>
-</SecurePayMessage>";
-
-            var r = SecurePayGateway.PeriodicPaymentXml(_card, "add", SecurePayGateway.GetClientId(), _chargeAmount2);
+            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var r = _gateway.CreatePeriodicPaymentXml(_card, SecurePayGateway.GetClientId(), p);
 
             Console.WriteLine(PrintXml(r));
             Assert.That(r, Is.StringContaining(@"<TxnList count=""1"""));
@@ -253,7 +244,7 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void Sha1_Hash_SecurePayCheckField()
         {
-            
+
             // Arrange
             var input = "ABC0010|txnpassword|0|Test Reference|100|20110616221931";
 
@@ -267,7 +258,7 @@ namespace Tests.Payments.SecurePay
 
         public static string PrintXml(string xml)
         {
-            using(var stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             using (var writer = new XmlTextWriter(stream, Encoding.Unicode))
             {
                 var document = new XmlDocument();
@@ -293,36 +284,25 @@ namespace Tests.Payments.SecurePay
             }
         }
 
-        //very temporary way to send the message will build this up propery asap
-        public string requestMessage =
-@"<?xml version=""1.0"" encoding=""UTF-8""?>
-<SecurePayMessage>
-    <MessageInfo>
-        <messageID>757a5be5b84b4d8ab84ec03ebd24af</messageID>
-        <messageTimestamp>20121006055444843500+660</messageTimestamp>
-        <timeoutValue>6</timeoutValue>
-        <apiVersion>xml-4.2</apiVersion>
-    </MessageInfo>
-    <MerchantInfo>
-        <merchantID>ABC0001</merchantID>
-        <password>abc123</password>
-    </MerchantInfo>
-    <RequestType>Payment</RequestType>
-    <Payment>
-      <TxnList count=""1"">
-       <Txn ID=""1"">
-        <txnType>0</txnType>
-        <txnSource>0</txnSource>
-        <amount>133700</amount>
-        <purchaseOrderNo>MountFranklin</purchaseOrderNo>
-        <CreditCardInfo>
-                <cardNumber>4444333322221111</cardNumber>
-                <expiryDate>10/15</expiryDate>
-        </CreditCardInfo>
-       </Txn>
-      </TxnList>
-    </Payment>
-</SecurePayMessage>";
+        [Test]
+        public void GuidTrim()
+        {
+            // Arrange
+            var i = 0;
+
+            while (i < 10)
+            {
+                var g = Guid.NewGuid();
+
+                // Act
+                var o = g.ToString().Replace("-", "").Substring(0, 30);
+
+                Assert.IsTrue(o.Length <= 30, "was " + o.Length);
+                Console.WriteLine(o);
+                // Assert
+                i++;
+            }
+        }
     }
 
     [Serializable]
@@ -342,5 +322,4 @@ namespace Tests.Payments.SecurePay
         [XmlAttribute]
         public string timeoutValue { get; set; }
     }
-
 }
