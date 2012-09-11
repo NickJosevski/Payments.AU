@@ -51,6 +51,8 @@
     <Compile Include="eWAY\RequestAccessCodeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Read.cs" />
+    <Compile Include="SecurePay\GatewayTests.cs" />
+    <Compile Include="SecurePay\LibraryDevelopmentTests.cs" />
     <Compile Include="SecurePay\NumericExtensions.cs" />
     <Compile Include="SecurePay\SecurePayGatewayFailureRetryTests.cs" />
     <Compile Include="SecurePay\SecurePayGatewayResponseTests.cs" />

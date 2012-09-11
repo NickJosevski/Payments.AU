@@ -110,16 +110,16 @@ namespace Payments.SecurePay
         {
             Defend(response.Status.StatusCode != (int)SecurePayStatusCodes.Normal, callingMethod, response);
 
-            if(response.Periodic == null 
-                || response.Periodic.PeriodicList == null 
-                || response.Periodic.PeriodicList.PeriodicItem == null)
+            var p = response.Periodic;
+
+            if(p == null || p.PeriodicList == null || p.PeriodicList.PeriodicItem == null)
             {
                 return;
             }
 
-            foreach(var p in response.Periodic.PeriodicList.PeriodicItem)
+            foreach(var pi in p.PeriodicList.PeriodicItem)
             {
-                Defend(p.ResponseCode != 0, callingMethod, p.ResponseCode, p.ResponseText);
+                Defend(pi.ResponseCode != 0, callingMethod, pi.ResponseCode, pi.ResponseText);
             }
         }
 
