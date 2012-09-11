@@ -356,6 +356,27 @@ namespace Payments.SecurePay
             }
             return builder.ToString();
         }
+
+        public static string ExceptBlanks(this string str)
+        {
+            var sb = new StringBuilder();
+            for (var i = 0; i < str.Length; i++)
+            {
+                var c = str[i];
+                switch (c)
+                {
+                    case '\r':
+                    case '\n':
+                    case '\t':
+                    case ' ':
+                        continue;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
     }
 
     public sealed class Utf8StringWriter : StringWriter
