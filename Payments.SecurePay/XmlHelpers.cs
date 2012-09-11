@@ -35,7 +35,7 @@ namespace Payments.SecurePay
         public static string SerializeObject<T>(this T toSerialize)
         {
             var xmlSerializer = new XmlSerializer(toSerialize.GetType());
-            var textWriter = new StringWriter();
+            var textWriter = new Utf8StringWriter();
 
             xmlSerializer.Serialize(textWriter, toSerialize);
             return textWriter.ToString();
@@ -60,6 +60,39 @@ namespace Payments.SecurePay
                 }
             }
             return sb.ToString();
+        }
+
+        public static string Print(this SecurePayMessage message)
+        {
+            return message.SerializeObject();
+        }
+
+        public static string Print(this string xml)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new XmlTextWriter(stream, Encoding.Unicode))
+            {
+                var document = new XmlDocument();
+
+                // Create an XmlDocument with the xml
+                document.LoadXml(xml);
+
+                writer.Formatting = Formatting.Indented;
+
+                // Write the XML into a formatting XmlTextWriter
+                document.WriteContentTo(writer);
+                writer.Flush();
+                stream.Flush();
+
+                // Have to rewind the MemoryStream in order to read the content
+                stream.Position = 0;
+
+                // Read MemoryStream contents into a StreamReader
+                var sReader = new StreamReader(stream);
+
+                // Extract the text from the StreamReader
+                return sReader.ReadToEnd();
+            }
         }
     }
     

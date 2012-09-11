@@ -108,13 +108,22 @@ namespace Payments.SecurePay
         public string Currency { get; set; }
 
         [XmlElement("txnID")]
-        public int TxnId { get; set; }
+        public string TxnId { get; set; }
 
         [XmlElement("receipt")]
         public string Receipt { get; set; }
 
         [XmlElement("ponum")]
         public string Ponum { get; set; }
+
+        [XmlElement("periodicType")]
+        public string PeriodicType { get; set; }
+
+        [XmlElement("paymentInterval")]
+        public string PaymentInterval { get; set; }
+
+        [XmlElement("numberOfPayments")]
+        public string NumberOfPayments { get; set; }
 
         [XmlElement("settlementDate")]
         public string SettlementDate { get; set; }

@@ -14,7 +14,7 @@ using Payments.SecurePay;
 namespace Tests.Payments.SecurePay
 {
     [TestFixture]
-    public class SecurePayGatewayTests : GatewayTests
+    public class SecurePayGatewayTests
     {
         private int _chargeAmount1;
 
@@ -100,7 +100,7 @@ namespace Tests.Payments.SecurePay
             var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPayment).SendMessageXml(oneOffPayment);
 
             // Assert
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -120,7 +120,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -134,7 +134,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("Second Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -154,7 +154,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -168,7 +168,7 @@ namespace Tests.Payments.SecurePay
             r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             Console.WriteLine("Second Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             // Assert
             Assert.IsNotNullOrEmpty(r);
@@ -181,7 +181,7 @@ namespace Tests.Payments.SecurePay
             r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             Console.WriteLine("Third Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             // Assert
 
@@ -204,7 +204,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -219,7 +219,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("Second Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -233,7 +233,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("Third Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -252,7 +252,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -264,14 +264,12 @@ namespace Tests.Payments.SecurePay
             request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.GetClientId(), p);
             SendingDebug(request);
 
-            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
+            var ex = Assert.Throws<SecurePayException>(() => _gateway.SendMessage(request, "unit test"));
 
             // Assert
-            Console.WriteLine("Second Response");
-            Console.WriteLine(PrintXml(r));
 
-            Assert.IsNotNullOrEmpty(r);
-            Assert.That(r, Is.StringContaining("Payment not found"));
+            Assert.IsNotNull(ex);
+            Assert.That(ex.StatusDescription, Is.StringContaining("Payment not found"));
         }
 
         /*
@@ -295,7 +293,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Duplicate Client ID Found"));
@@ -316,7 +314,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Console.WriteLine("First Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -333,7 +331,7 @@ namespace Tests.Payments.SecurePay
             Assert.That(r, Is.StringContaining("<successful>yes"));
 
             Console.WriteLine("Second Response");
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
         }
 
         [Test]
@@ -342,7 +340,7 @@ namespace Tests.Payments.SecurePay
             var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var r = _gateway.CreateReadyToTriggerPaymentXml(_card, SecurePayGateway.GetClientId(), p);
 
-            Console.WriteLine(PrintXml(r));
+            Console.WriteLine(r.Print());
             Assert.That(r, Is.StringContaining(@"<PeriodicList count=""1"""));
             Assert.That(r, Is.StringContaining(@"utf-8"));
             Assert.That(r, Is.StringContaining(@"<?xml version=""1.0"" encoding="));
@@ -355,7 +353,7 @@ namespace Tests.Payments.SecurePay
         {
             Console.WriteLine("REQUEST:");
             Console.WriteLine("********************************************************************************");
-            Console.WriteLine(PrintXml(xml));
+            Console.WriteLine(xml.Print());
             Console.WriteLine("********************************************************************************");
             Console.WriteLine("");
         }
@@ -475,9 +473,9 @@ namespace Tests.Payments.SecurePay
             Assert.That(secPayMessageCreatedFromXml.Periodic.PeriodicList.Count, Is.EqualTo(2));
             Assert.IsNotEmpty(secPayMessageCreatedFromXml.Periodic.PeriodicList.PeriodicItem);
             Assert.IsTrue(secPayMessageCreatedFromXml.Periodic.PeriodicList.PeriodicItem.Count == 2);
-            Assert.IsTrue(secPayMessageCreatedFromXml.Periodic.PeriodicList.PeriodicItem[0].Id == 1);
 
             Assert.IsTrue(secPayMessageCreatedFromXml.Periodic.PeriodicList.PeriodicItem[0].Id == 1);
+            Assert.IsTrue(secPayMessageCreatedFromXml.Periodic.PeriodicList.PeriodicItem[1].Id == 2);
 
             var builder = new StringBuilder();
             using (var writer = new Utf8StringWriter(builder))
@@ -537,42 +535,6 @@ namespace Tests.Payments.SecurePay
                 Console.WriteLine(o);
                 // Assert
                 i++;
-            }
-        }
-    }
-
-    public class GatewayTests
-    {
-        public static string PrintXml(SecurePayMessage message)
-        {
-            return message.SerializeObject();
-        }
-
-        public static string PrintXml(string xml)
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new XmlTextWriter(stream, Encoding.Unicode))
-            {
-                var document = new XmlDocument();
-
-                // Create an XmlDocument with the xml
-                document.LoadXml(xml);
-
-                writer.Formatting = Formatting.Indented;
-
-                // Write the XML into a formatting XmlTextWriter
-                document.WriteContentTo(writer);
-                writer.Flush();
-                stream.Flush();
-
-                // Have to rewind the MemoryStream in order to read the content
-                stream.Position = 0;
-
-                // Read MemoryStream contents into a StreamReader
-                var sReader = new StreamReader(stream);
-
-                // Extract the text from the StreamReader
-                return sReader.ReadToEnd();
             }
         }
     }
