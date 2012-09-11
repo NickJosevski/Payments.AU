@@ -37,14 +37,14 @@ namespace Tests.Payments.SecurePay
 
         private SecurePayGateway _gateway;
 
-        private ISecurePayEndpoint _fakeGateway;
+        private ICommunicate _fakeGateway;
 
         [TestFixtureSetUp]
         public void Fixture()
         {
-            _fakeGateway = Substitute.For<ISecurePayEndpoint>();
+            _fakeGateway = Substitute.For<ICommunicate>();
 
-            _gateway = new SecurePayGateway(_fakeGateway, ApiPeriodic);
+            _gateway = new SecurePayGateway(_fakeGateway, "ABC0001", "abc123", ApiPeriodic);
 
             _card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }
@@ -58,13 +58,13 @@ namespace Tests.Payments.SecurePay
 
             var payment = new SecurePayPayment { Amount = 1151, Currency = "AUD" };
 
-            const string txt = "Unable To Connect To Server";
+            const string Unable = "Unable To Connect To Server";
             // NOTE: we have max tries of 5, so set up 4 bad, then last will just work
             _fakeGateway.HttpPost("", "").ReturnsForAnyArgs(
-                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = txt } },
-                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = txt } },
-                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = txt } },
-                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = txt } },
+                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
+                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
+                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
+                new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
                 new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 0, StatusDescription = "Normal" } });
 
             // Logic for retries

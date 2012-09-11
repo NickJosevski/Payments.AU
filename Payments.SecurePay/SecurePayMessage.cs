@@ -175,6 +175,14 @@ namespace Payments.SecurePay
         }
     }
 
+    public enum ActionType
+    {
+        // Must be lowercase
+        add,
+        trigger,
+        delete
+    }
+
     public enum SecurePayStatusCodes
     {
         Normal = 0,

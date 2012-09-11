@@ -14,7 +14,15 @@ namespace Tests.Payments.SecurePay
     [TestFixture]
     public class LibraryDevelopmentTests : GatewayTests
     {
+        private SecurePayGateway _gateway;
+
         public const string ApiPeriodic = "https://test.securepay.com.au/xmlapi/periodic";
+
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPeriodic);    
+        }
 
         [Test]
         [Ignore("file read write set up")]
@@ -147,10 +155,8 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void Test_BuildViaXdoc()
         {
-            var gateway = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic);
-
             var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
-            var r = gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.GetClientId(), p);
+            var r = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.GetClientId(), p);
 
             Console.WriteLine(r.Print());
 
@@ -182,16 +188,15 @@ namespace Tests.Payments.SecurePay
         public void TurnXmlStringIntoType()
         {
             // Arrange
-            var gateway = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic);
 
             Console.WriteLine("Future Monthly");
             var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
 
-            var request = gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
+            var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
 
             // Act
-            var r = gateway.SendMessage(request, "unit test");
+            var r = _gateway.SendMessage(request, "unit test");
 
 
             // Assert

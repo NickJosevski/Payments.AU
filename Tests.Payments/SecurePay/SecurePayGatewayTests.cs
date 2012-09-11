@@ -23,7 +23,7 @@ namespace Tests.Payments.SecurePay
         [TestFixtureSetUp]
         public void Fixture()
         {
-            _gateway = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic);
+            _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001","abc123", ApiPeriodic);
             
             SetupCardsAndChargeAmounts();
         }
@@ -42,7 +42,7 @@ namespace Tests.Payments.SecurePay
             var oneOffPayment = _gateway.SinglePaymentXml(ValidCard, ChargeAmount1 * 100, "OneOffInc");
             SendingDebug(oneOffPayment);
 
-            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPayment).SendMessageXml(oneOffPayment);
+            var r = _gateway.SendMessageXml(oneOffPayment);
 
             // Assert
             Console.WriteLine(r.Print());
@@ -162,7 +162,7 @@ namespace Tests.Payments.SecurePay
         }
 
         [Test]
-        public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist()
+        public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist_ExpectException()
         {
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.GetClientId(), p);

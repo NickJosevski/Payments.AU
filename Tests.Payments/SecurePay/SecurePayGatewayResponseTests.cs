@@ -18,7 +18,7 @@ namespace Tests.Payments.SecurePay
         [TestFixtureSetUp]
         public void Fixture()
         {
-            _gateway = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic);
+            _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPeriodic);
 
             _card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }

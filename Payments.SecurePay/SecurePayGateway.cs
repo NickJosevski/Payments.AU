@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,95 +9,30 @@ using System.Xml.Linq;
 
 namespace Payments.SecurePay
 {
-    public enum ActionType
-    {
-        // Must be lowercase
-        add,
-        trigger,
-        delete
-    }
-
-    public interface ISecurePayEndpoint
-    {
-        SecurePayMessage HttpPost(string uri, string message);
-    }
-
-    public class SecurePayEndpoint : ISecurePayEndpoint
-    {
-        public SecurePayMessage HttpPost(string uri, string message)
-        {
-            ApiUsageDebug(uri);
-            var request = (HttpWebRequest)WebRequest.Create(uri);
-
-            request.Method = "POST";
-            request.ContentType = "application/xml";
-            request.Accept = "application/xml";
-
-            var bytes = Encoding.UTF8.GetBytes(message);
-
-            request.ContentLength = bytes.Length;
-
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(bytes, 0, bytes.Length);
-            }
-
-            using (var response = (HttpWebResponse)request.GetResponse())
-            {
-                using (var reader = new StreamReader(response.GetResponseStream()))
-                {
-                    return reader.ReadToEnd().Trim().As<SecurePayMessage>();
-                }
-            }
-        }
-
-        private void ApiUsageDebug(string msg)
-        {
-            Console.WriteLine("");
-            Console.WriteLine("####   ####   ####   ####");
-            Console.WriteLine("communicating via:[{0}]", msg);
-            Console.WriteLine("####   ####   ####   ####");
-            Console.WriteLine("");
-        }
-    }
-
     public class SecurePayGateway
     {
         private readonly int _connectionTimeoutSeconds;
 
-        private readonly ISecurePayEndpoint _endpoint;
+        private readonly ICommunicate _endpoint;
 
         private readonly string _merchantId;
 
         private readonly string _password;
 
-        //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
-        //public const string SecurePay = "https://test.securepay.com.au/xmlapi/periodic";
-        public string ApiEndpoint = "https://test.securepay.com.au/xmlapi/payment";
+        private readonly string _apiUri;
 
-        public SecurePayGateway(ISecurePayEndpoint endpoint, string url)
+        public SecurePayGateway(ICommunicate endpoint, string merchantId, string merchantPassword, string apiUri)
         {
-            _endpoint = endpoint;
-            ApiEndpoint = url;
-            //TODO: get from configuration / secure location
-            _merchantId = "ABC0001";
-            _password = "abc123";
-            _connectionTimeoutSeconds = 30;
-        }
-
-        public SecurePayGateway(ISecurePayEndpoint endpoint, string merchantId, string merchantPassword, string url)
-        {
-            //TODO: get from configuration / secure location
             _endpoint = endpoint;
             _merchantId = merchantId;
             _password = merchantPassword;
-            _connectionTimeoutSeconds = 30;
-            ApiEndpoint = url;
+            _connectionTimeoutSeconds = 60;
+            _apiUri = apiUri;
         }
 
         public SecurePayMessage SendMessage(string requestMessage, string callingMethod)
         {
-            var response = HttpPost(ApiEndpoint, requestMessage);
+            var response = HttpPost(_apiUri, requestMessage);
 
             ValidateReponse(response, callingMethod);
 
@@ -130,7 +63,7 @@ namespace Payments.SecurePay
         /// <returns></returns>
         public string SendMessageXml(string requestMessage)
         {
-            var response = HttpPost(ApiEndpoint, requestMessage);
+            var response = HttpPost(_apiUri, requestMessage);
 
             // because this is a test helper we're converting back (those tests were written to check text)
             return response.SerializeObject();
