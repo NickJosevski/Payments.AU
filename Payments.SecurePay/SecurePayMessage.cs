@@ -141,4 +141,61 @@ namespace Payments.SecurePay
         [XmlElement("cardDescription")]
         public string CardDescription { get; set; }
     }
+
+    public class SecurePayException : Exception
+    {
+        public int StatusCode { get; set; }
+
+        public string StatusDescription { get; set; }
+
+        public SecurePayException(string msg)
+            :base(msg)
+        {
+        }
+
+        public SecurePayException(string msg, int statusCode, string statusDescription)
+            : base(msg)
+        {
+            StatusCode = statusCode;
+            StatusDescription = statusDescription;
+        }
+
+        public SecurePayException(string msg, Exception inner)
+            : base(msg, inner)
+        {
+        }
+    }
+
+    public enum SecurePayStatusCodes
+    {
+        Normal = 0,
+        InvalidMerchantId = 504,
+        InvalidUrl = 505,
+        UnableToConnectToServer = 510,
+        ServerConnectionAbortedDuringTransaction = 511,
+        TransactionTimedOutByClient = 512,
+        GeneralDatabaseError = 513,
+        ErrorLoadingPropertiesFile = 514,
+        FatalUnknownError = 515,
+        RequestTypeUnavailable = 516,
+        MessageFormatError = 517,
+        ResponseNotReceived = 524,
+        SystemMaintenanceInProgress = 545,
+        InvalidPassword = 550,
+        NotImplemented = 5575,
+        TooManyRecordsForProcessing = 577,
+        ProcessMethodHasNotBeenCalled = 580,
+        MerchantDisabled = 595
+    }
+
+    public enum SecurePayCardType
+    {
+        Unknown = 0,
+        JCB,
+        AmericanExpress,
+        DinersClub,
+        Bankcard,
+        MasterCard,
+        Visa
+    }
 }

@@ -1,6 +1,6 @@
 namespace Payments.SecurePay
 {
-    public class CardInfo
+    public class SecurePayCardInfo
     {
         public string Number { get; set; }
 
@@ -9,12 +9,5 @@ namespace Payments.SecurePay
         public string ExpiryYear { get; set; }
 
         public string Expiry { get; set; }
-    }
-
-    public class Payment
-    {
-        public decimal Amount { get; set; }
-
-        public string Currency { get; set; }
     }
 }

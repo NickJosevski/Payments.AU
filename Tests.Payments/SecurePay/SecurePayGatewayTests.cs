@@ -14,13 +14,13 @@ using Payments.SecurePay;
 namespace Tests.Payments.SecurePay
 {
     [TestFixture]
-    public class SecurePayGatewayTests
+    public class SecurePayGatewayTests : GatewayTests
     {
         private int _chargeAmount1;
 
         private int _chargeAmount2;
 
-        private CardInfo _card;
+        private SecurePayCardInfo _card;
 
         private SecurePayGateway _gateway;
 
@@ -30,13 +30,13 @@ namespace Tests.Payments.SecurePay
             var currentVal = Int32.Parse(ReadFromFile(@"..\..\increasing-amount.txt").Trim());
 
             _chargeAmount1 = currentVal;
-            _chargeAmount2 = currentVal + 1;
+            _chargeAmount2 = currentVal + 100;
 
-            WriteToFile(@"..\..\increasing-amount.txt", currentVal + 1);
+            WriteToFile(@"..\..\increasing-amount.txt", currentVal + 100);
 
-            _gateway = new SecurePayGateway();
+            _gateway = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic);
 
-            _card = new CardInfo { Number = "4444333322221111", Expiry = "10/15" };
+            _card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }
 
         public string ReadFromFile(string filePath)
@@ -94,10 +94,10 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_OneOffPayemt()
         {
-            var oneOffPayment = SecurePayGateway.SinglePaymentXml(_card, _chargeAmount1 * 100, "OneOffInc");
+            var oneOffPayment = _gateway.SinglePaymentXml(_card, _chargeAmount1 * 100, "OneOffInc");
             SendingDebug(oneOffPayment);
 
-            var r = new SecurePayGateway(ApiPayment).SendMessage(oneOffPayment);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPayment).SendMessageXml(oneOffPayment);
 
             // Assert
             Console.WriteLine(PrintXml(r));
@@ -111,12 +111,12 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_PeriodicCharge_Setup_Then_Charge()
         {
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(_card, id, p);
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -130,7 +130,7 @@ namespace Tests.Payments.SecurePay
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
             SendingDebug(request);
 
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("Second Response");
@@ -145,12 +145,12 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_PeriodicCharge_Setup_Then_Charge_DuplicateMessageIds()
         {
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var customerId = SecurePayGateway.GetClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(_card, customerId, p);
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -165,7 +165,7 @@ namespace Tests.Payments.SecurePay
 
             request = _gateway.TriggerPeriodicPaymentXmlWithMessageId(msgId, customerId, p);
             SendingDebug(request);
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             Console.WriteLine("Second Response");
             Console.WriteLine(PrintXml(r));
@@ -178,7 +178,7 @@ namespace Tests.Payments.SecurePay
 
             request = _gateway.TriggerPeriodicPaymentXmlWithMessageId(msgId, customerId, p);
             SendingDebug(request);
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             Console.WriteLine("Third Response");
             Console.WriteLine(PrintXml(r));
@@ -195,12 +195,12 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_Setup_Charge1stTime_Charge2ndTimeDiffValue()
         {
             var id = SecurePayGateway.GetClientId();
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(_card, id, p);
             SendingDebug(request);
 
             // Charge Setup
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -215,7 +215,7 @@ namespace Tests.Payments.SecurePay
             SendingDebug(request);
 
             // Charge 1
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("Second Response");
@@ -229,7 +229,7 @@ namespace Tests.Payments.SecurePay
             // Charge 2
             p.Amount += 100;
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("Third Response");
@@ -244,11 +244,11 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist()
         {
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(_card, SecurePayGateway.GetClientId(), p);
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -264,7 +264,7 @@ namespace Tests.Payments.SecurePay
             request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.GetClientId(), p);
             SendingDebug(request);
 
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("Second Response");
@@ -286,12 +286,12 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_Setup_ThenSetupForFuture()
         {
             Console.WriteLine("Future Monthly");
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
             var request = _gateway.CreateScheduledPaymentXml(_card, id, p, new DateTime());
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -307,12 +307,12 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_Setup_ThenSetupForFuture_EditAmountByDoubling()
         {
             Console.WriteLine("Future Monthly");
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
             var request = _gateway.CreateScheduledPaymentXml(_card, id, p, new DateTime());
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Assert
             Console.WriteLine("First Response");
@@ -325,7 +325,7 @@ namespace Tests.Payments.SecurePay
             SendingDebug(request);
             p.Amount *= 2;
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
-            r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             Assert.IsNotNullOrEmpty(r);
             Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -339,7 +339,7 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void Test_BuildViaXdoc()
         {
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var r = _gateway.CreateReadyToTriggerPaymentXml(_card, SecurePayGateway.GetClientId(), p);
 
             Console.WriteLine(PrintXml(r));
@@ -381,12 +381,12 @@ namespace Tests.Payments.SecurePay
         {
             // Arrange
             Console.WriteLine("Future Monthly");
-            var p = new Payment { Amount = _chargeAmount2, Currency = "AUD" };
+            var p = new SecurePayPayment { Amount = _chargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.GetClientId();
             var request = _gateway.CreateScheduledPaymentXml(_card, id, p, new DateTime());
             SendingDebug(request);
 
-            var r = new SecurePayGateway(ApiPeriodic).SendMessage(request);
+            var r = new SecurePayGateway(new SecurePayEndpoint(), ApiPeriodic).SendMessageXml(request);
 
             // Act
             var o = FromXml<SecurePayMessage>(r);
@@ -520,6 +520,34 @@ namespace Tests.Payments.SecurePay
             }
         }
 
+        [Test]
+        public void GuidTrim()
+        {
+            // Arrange
+            var i = 0;
+
+            while (i < 10)
+            {
+                var g = Guid.NewGuid();
+
+                // Act
+                var o = g.ToString().Replace("-", "").Substring(0, 30);
+
+                Assert.IsTrue(o.Length <= 30, "was " + o.Length);
+                Console.WriteLine(o);
+                // Assert
+                i++;
+            }
+        }
+    }
+
+    public class GatewayTests
+    {
+        public static string PrintXml(SecurePayMessage message)
+        {
+            return message.SerializeObject();
+        }
+
         public static string PrintXml(string xml)
         {
             using (var stream = new MemoryStream())
@@ -545,26 +573,6 @@ namespace Tests.Payments.SecurePay
 
                 // Extract the text from the StreamReader
                 return sReader.ReadToEnd();
-            }
-        }
-
-        [Test]
-        public void GuidTrim()
-        {
-            // Arrange
-            var i = 0;
-
-            while (i < 10)
-            {
-                var g = Guid.NewGuid();
-
-                // Act
-                var o = g.ToString().Replace("-", "").Substring(0, 30);
-
-                Assert.IsTrue(o.Length <= 30, "was " + o.Length);
-                Console.WriteLine(o);
-                // Assert
-                i++;
             }
         }
     }
