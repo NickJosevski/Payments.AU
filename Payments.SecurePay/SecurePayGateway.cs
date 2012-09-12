@@ -51,6 +51,8 @@ namespace Payments.SecurePay
 
         public SecurePayMessage SingleCharge(SecurePayCardInfo card, SecurePayPayment payment, string referenceId)
         {
+            card.ValidateExpiry();
+
             var request = SinglePaymentXml(card, payment, referenceId);
 
             var response = SendMessage(request, "SingleCharge");
@@ -60,6 +62,8 @@ namespace Payments.SecurePay
 
         public SecurePayMessage CreateCustomerWithCharge(string clientId, SecurePayCardInfo card, SecurePayPayment payment)
         {
+            card.ValidateExpiry();
+
             var request = CreateReadyToTriggerPaymentXml(card, clientId, payment);
 
             var response = SendMessage(request, "CreateCustomerWithCharge");
@@ -99,7 +103,7 @@ namespace Payments.SecurePay
                                 new XElement("clientID", customerId),
                                 new XElement("CreditCardInfo",
                                     new XElement("cardNumber", card.Number),
-                                    new XElement("expiryDate", card.Expiry)),
+                                    new XElement("expiryDate", card.GetExpiry())),
                                 new XElement("amount", payment.Amount),
                                 new XElement("currency", payment.Currency.ToUpper()),
                                 new XElement("periodicType", "4") // << Triggered Payment
@@ -172,6 +176,7 @@ namespace Payments.SecurePay
         public string CreateScheduledPaymentXml(SecurePayCardInfo card, string customerId, SecurePayPayment payment, DateTime startDate)
         {
             ValidatePayment(payment);
+            card.ValidateExpiry();
 
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
@@ -192,7 +197,7 @@ namespace Payments.SecurePay
                                 new XElement("clientID", customerId),
                                 new XElement("CreditCardInfo",
                                     new XElement("cardNumber", card.Number),
-                                    new XElement("expiryDate", card.Expiry)),
+                                    new XElement("expiryDate", card.GetExpiry())),
                                 new XElement("amount", payment.Amount),
                                 new XElement("currency", payment.Currency.ToUpper()),
                                 new XElement("startDate", "20120901"),
@@ -207,6 +212,8 @@ namespace Payments.SecurePay
         /// </summary>
         public string SinglePaymentXml(SecurePayCardInfo card, SecurePayPayment payment, string purchaseOrderNo)
         {
+            card.ValidateExpiry();
+
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
                 new XElement("SecurePayMessage",
@@ -229,7 +236,7 @@ namespace Payments.SecurePay
                                 new XElement("purchaseOrderNo", purchaseOrderNo),
                                     new XElement("CreditCardInfo",
                                         new XElement("cardNumber", card.Number),
-                                        new XElement("expiryDate", card.Expiry)
+                                        new XElement("expiryDate", card.GetExpiry())
                                     )))))).ToStringWithDeclaration();
         }
 

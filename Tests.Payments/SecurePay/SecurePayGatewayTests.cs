@@ -39,17 +39,24 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_OneOffPayemt()
         {
-            var p = new SecurePayPayment { Amount = ChargeAmount1 * 100, Currency = "AUD" };
+            //NOTE: usage of separate instance of SecurePayGateway() with 'ApiPayment' and NOT 'ApiPeriodic'
+            var oneOffPaymentGateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPayment);
 
-            var oneOffPayment = _gateway.SinglePaymentXml(ValidCard, p, "OneOffInc");
-            SendingDebug(oneOffPayment);
+            var p = new SecurePayPayment { Amount = ChargeAmount1, Currency = "AUD" };
 
-            var r = _gateway.SendMessage(oneOffPayment, "unit test");
+            var oneOffPayment = oneOffPaymentGateway.SinglePaymentXml(ValidCard, p, "OneOffInc");
+            DebugDisplay(oneOffPayment);
+
+            var r = oneOffPaymentGateway.SendMessage(oneOffPayment, "unit test");
 
             // Assert
+            Console.WriteLine("Response:");
             Console.WriteLine(r.Print());
 
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            Assert.IsNotNull(r);
+            Assert.That(r.Status.StatusDescription, Is.Not.ContainsSubstring("Unable to connect to server"));
+            Assert.That(r.Status.StatusDescription, Is.EqualTo("Normal"));
+            Assert.That(r.Status.StatusCode, Is.EqualTo(0));
         }
 
         [Test]
@@ -58,7 +65,7 @@ namespace Tests.Payments.SecurePay
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, id, p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var r = _gateway.SendMessage(request, "Setup_Then_Charge");
 
@@ -66,10 +73,10 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             r = _gateway.SendMessage(request, "Setup_Then_Charge");
 
@@ -77,7 +84,7 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
         }
 
         [Test]
@@ -86,7 +93,7 @@ namespace Tests.Payments.SecurePay
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var customerId = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, customerId, p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var r = _gateway.SendMessage(request, "unit test");
 
@@ -94,29 +101,29 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine("First Response");
             Console.WriteLine(r.Print());
 
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
             var msgId = SecurePayGateway.CreateMessageId();
 
             request = _gateway.TriggerPeriodicPaymentXmlWithMessageId(msgId, customerId, p);
-            SendingDebug(request);
+            DebugDisplay(request);
             r = _gateway.SendMessage(request, "unit test");
 
             Console.WriteLine("Second Response");
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
             request = _gateway.TriggerPeriodicPaymentXmlWithMessageId(msgId, customerId, p);
-            SendingDebug(request);
+            DebugDisplay(request);
             r = _gateway.SendMessage(request, "unit test");
 
             Console.WriteLine("Third Response");
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
         }
 
         [Test]
@@ -125,7 +132,7 @@ namespace Tests.Payments.SecurePay
             var id = SecurePayGateway.CreateClientId();
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, id, p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             // Charge Setup
             var r = _gateway.SendMessage(request, "unit test");
@@ -134,10 +141,10 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             // Charge 1
             r = _gateway.SendMessage(request, "unit test");
@@ -146,7 +153,7 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
             // Charge 2
             p.Amount += 100;
@@ -157,7 +164,7 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
         }
 
         [Test]
@@ -165,7 +172,7 @@ namespace Tests.Payments.SecurePay
         {
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.CreateClientId(), p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var r = _gateway.SendMessage(request, "unit test");
 
@@ -173,12 +180,12 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine("First Response");
             Console.WriteLine(r.Print());
 
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
 
             // NOTE: new id, so won't find customer
             request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.CreateClientId(), p);
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var ex = Assert.Throws<SecurePayException>(() => _gateway.SendMessage(request, "unit test"));
 
@@ -195,7 +202,7 @@ namespace Tests.Payments.SecurePay
             var id = SecurePayGateway.CreateClientId();
 
             var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var r = _gateway.SendMessage(request, "unit test");
 
@@ -203,7 +210,7 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
         }
 
         [Test]
@@ -213,7 +220,7 @@ namespace Tests.Payments.SecurePay
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var id = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
-            SendingDebug(request);
+            DebugDisplay(request);
 
             var r = _gateway.SendMessage(request, "unit test");
 
@@ -221,9 +228,9 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine("First Response");
             Console.WriteLine(r.Print());
 
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
 
-            SendingDebug(request);
+            DebugDisplay(request);
             p.Amount *= 2;
             request = _gateway.TriggerPeriodicPaymentXml(id, p);
             r = _gateway.SendMessage(request, "unit test");
@@ -232,7 +239,7 @@ namespace Tests.Payments.SecurePay
             Console.WriteLine(r.Print());
 
             // Assert
-            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
+            AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
         }
     }
 }

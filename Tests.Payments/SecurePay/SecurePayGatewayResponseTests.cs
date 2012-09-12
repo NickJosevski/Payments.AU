@@ -20,7 +20,7 @@ namespace Tests.Payments.SecurePay
         {
             _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPeriodic);
 
-            _card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
+            _card = new SecurePayCardInfo { Number = "4444333322221111", ExpiryMonth = 10, ExpiryYear = 15 };
         }
 
         [Test]

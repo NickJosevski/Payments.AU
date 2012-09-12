@@ -25,10 +25,10 @@ namespace Tests.Payments.SecurePay
             WriteToFile(@"..\..\increasing-amount.txt", currentVal + 100);
 
 
-            ValidCard = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
+            ValidCard = new SecurePayCardInfo { Number = "4444333322221111", ExpiryMonth = 10, ExpiryYear = 15 };
         }
 
-        protected void AssertStatusGoodSuccessMarkerNoConnectionIssues(SecurePayMessage r)
+        protected void AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(SecurePayMessage r)
         {
             Assert.IsNotNull(r);
             Assert.That(r.Status.StatusDescription, Is.Not.ContainsSubstring("Unable to connect to server"));
@@ -61,7 +61,7 @@ namespace Tests.Payments.SecurePay
             }
         }
 
-        protected void SendingDebug(string xml)
+        protected void DebugDisplay(string xml)
         {
             Console.WriteLine("REQUEST:");
             Console.WriteLine("********************************************************************************");

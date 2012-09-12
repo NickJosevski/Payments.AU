@@ -289,6 +289,22 @@ namespace Tests.Payments.SecurePay
             }
         }
 
+        [Test]
+        public void SecurePayCardInfo_Format()
+        {
+            Assert.AreEqual(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 2 }.GetExpiry(), "02/02");
+            Assert.AreEqual(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 10 }.GetExpiry(), "02/10");
+            Assert.AreEqual(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 2010 }.GetExpiry(), "02/10");
+            Assert.AreEqual(new SecurePayCardInfo { ExpiryMonth = 12, ExpiryYear = 2012 }.GetExpiry(), "12/12");
+            Assert.AreEqual(new SecurePayCardInfo { ExpiryMonth = 12, ExpiryYear = 112 }.GetExpiry(), "12/12");
+
+            Assert.True(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 2 }.ValidateExpiry(), "02/02");
+            Assert.True(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 10 }.ValidateExpiry(), "02/10");
+            Assert.True(new SecurePayCardInfo { ExpiryMonth = 2, ExpiryYear = 2010 }.ValidateExpiry(), "02/10");
+            Assert.True(new SecurePayCardInfo { ExpiryMonth = 12, ExpiryYear = 2012 }.ValidateExpiry(), "12/12");
+            Assert.True(new SecurePayCardInfo { ExpiryMonth = 12, ExpiryYear = 112 }.ValidateExpiry(), "12/12");
+        }
+
         private string ReplaceNonAlphaNumeric(string str)
         {
             return new Regex("[^a-zA-Z0-9 -]").Replace(str, "");
