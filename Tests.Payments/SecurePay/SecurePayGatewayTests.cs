@@ -42,22 +42,19 @@ namespace Tests.Payments.SecurePay
             var oneOffPayment = _gateway.SinglePaymentXml(ValidCard, ChargeAmount1 * 100, "OneOffInc");
             SendingDebug(oneOffPayment);
 
-            var r = _gateway.SendMessageXml(oneOffPayment);
+            var r = _gateway.SendMessage(oneOffPayment, "unit test");
 
             // Assert
             Console.WriteLine(r.Print());
 
-            Assert.IsNotNullOrEmpty(r);
-            Assert.That(r, Is.Not.ContainsSubstring("Unable to connect to server"));
-            Assert.That(r, Is.Not.ContainsSubstring("Invalid Transaction"));
-            Assert.That(r, Is.StringContaining("<statusCode>0"));
+            AssertStatusGoodSuccessMarkerNoConnectionIssues(r);
         }
 
         [Test]
         public void SecurePayGateway_PeriodicCharge_Setup_Then_Charge()
         {
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
-            var id = SecurePayGateway.GetClientId();
+            var id = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, id, p);
             SendingDebug(request);
 
@@ -85,7 +82,7 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_Setup_Then_Charge_DuplicateMessageIds()
         {
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
-            var customerId = SecurePayGateway.GetClientId();
+            var customerId = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, customerId, p);
             SendingDebug(request);
 
@@ -123,7 +120,7 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_PeriodicCharge_Setup_Charge1stTime_Charge2ndTimeDiffValue()
         {
-            var id = SecurePayGateway.GetClientId();
+            var id = SecurePayGateway.CreateClientId();
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
             var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, id, p);
             SendingDebug(request);
@@ -165,7 +162,7 @@ namespace Tests.Payments.SecurePay
         public void SecurePayGateway_PeriodicCharge_1Setup_2ChargeFailsCustomerDoesntExist_ExpectException()
         {
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
-            var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.GetClientId(), p);
+            var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.CreateClientId(), p);
             SendingDebug(request);
 
             var r = _gateway.SendMessage(request, "unit test");
@@ -178,7 +175,7 @@ namespace Tests.Payments.SecurePay
 
 
             // NOTE: new id, so won't find customer
-            request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.GetClientId(), p);
+            request = _gateway.TriggerPeriodicPaymentXml(SecurePayGateway.CreateClientId(), p);
             SendingDebug(request);
 
             var ex = Assert.Throws<SecurePayException>(() => _gateway.SendMessage(request, "unit test"));
@@ -193,7 +190,7 @@ namespace Tests.Payments.SecurePay
         {
             Console.WriteLine("Future Monthly");
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
-            var id = SecurePayGateway.GetClientId();
+            var id = SecurePayGateway.CreateClientId();
 
             var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
             SendingDebug(request);
@@ -212,7 +209,7 @@ namespace Tests.Payments.SecurePay
         {
             Console.WriteLine("Future Monthly");
             var p = new SecurePayPayment { Amount = ChargeAmount2, Currency = "AUD" };
-            var id = SecurePayGateway.GetClientId();
+            var id = SecurePayGateway.CreateClientId();
             var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
             SendingDebug(request);
 

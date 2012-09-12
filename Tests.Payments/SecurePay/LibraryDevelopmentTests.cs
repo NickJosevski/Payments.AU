@@ -21,7 +21,9 @@ namespace Tests.Payments.SecurePay
         [TestFixtureSetUp]
         public void Setup()
         {
-            _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPeriodic);    
+            _gateway = new SecurePayGateway(new SecurePayWebCommunication(), "ABC0001", "abc123", ApiPeriodic);
+
+            SetupCardsAndChargeAmounts();
         }
 
         [Test]
@@ -156,7 +158,7 @@ namespace Tests.Payments.SecurePay
         public void Test_BuildViaXdoc()
         {
             var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
-            var r = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.GetClientId(), p);
+            var r = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.CreateClientId(), p);
 
             Console.WriteLine(r.Print());
 
@@ -191,7 +193,7 @@ namespace Tests.Payments.SecurePay
 
             Console.WriteLine("Future Monthly");
             var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
-            var id = SecurePayGateway.GetClientId();
+            var id = SecurePayGateway.CreateClientId();
 
             var request = _gateway.CreateScheduledPaymentXml(ValidCard, id, p, new DateTime());
 

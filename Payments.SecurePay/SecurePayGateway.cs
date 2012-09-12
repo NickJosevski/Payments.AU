@@ -9,7 +9,16 @@ using System.Xml.Linq;
 
 namespace Payments.SecurePay
 {
-    public class SecurePayGateway
+    public interface ISecurePayGateway
+    {
+        SecurePayMessage SingleCharge(SecurePayCardInfo card, SecurePayPayment payment, string referenceId);
+
+        SecurePayMessage CreateCustomerWithCharge(string clientId, SecurePayCardInfo card, SecurePayPayment payment);
+
+        SecurePayMessage ChargeExistingCustomer(string clientId, SecurePayPayment payment);
+    }
+
+    public class SecurePayGateway : ISecurePayGateway
     {
         private readonly int _connectionTimeoutSeconds;
 
@@ -39,39 +48,9 @@ namespace Payments.SecurePay
             return response;
         }
 
-        private void ValidateReponse(SecurePayMessage response, string callingMethod)
+        public SecurePayMessage SingleCharge(SecurePayCardInfo card, SecurePayPayment payment, string referenceId)
         {
-            Defend(response.Status.StatusCode != (int)SecurePayStatusCodes.Normal, callingMethod, response);
-
-            var p = response.Periodic;
-
-            if(p == null || p.PeriodicList == null || p.PeriodicList.PeriodicItem == null)
-            {
-                return;
-            }
-
-            foreach(var pi in p.PeriodicList.PeriodicItem)
-            {
-                Defend(pi.ResponseCode != 0, callingMethod, pi.ResponseCode, pi.ResponseText);
-            }
-        }
-
-        /// <summary>
-        /// Test Method, where message is crafted externally (i.e. unit tests).
-        /// </summary>
-        /// <param name="requestMessage"></param>
-        /// <returns></returns>
-        public string SendMessageXml(string requestMessage)
-        {
-            var response = HttpPost(_apiUri, requestMessage);
-
-            // because this is a test helper we're converting back (those tests were written to check text)
-            return response.SerializeObject();
-        }
-
-        public SecurePayMessage SingleCharge(SecurePayCardInfo card, int amount, string referenceId)
-        {
-            var request = SinglePaymentXml(card, amount, referenceId);
+            var request = SinglePaymentXml(card, payment, referenceId);
 
             var response = SendMessage(request, "SingleCharge");
 
@@ -94,19 +73,6 @@ namespace Payments.SecurePay
             var response = SendMessage(request, "ChargeExistingCustomer");
 
             return response;
-        }
-
-        private static void Defend(bool condition, string method, SecurePayMessage response)
-        {
-            Defend(condition, method, response.Status.StatusCode, response.Status.StatusDescription);
-        }
-
-        private static void Defend(bool condition, string method, int statusCode, string statusDescription)
-        {
-            if (condition)
-            {
-                throw new SecurePayException(method + " action was unsuccessful", statusCode, statusDescription);
-            }
         }
 
         public string CreateReadyToTriggerPaymentXml(SecurePayCardInfo card, string customerId, SecurePayPayment payment)
@@ -139,6 +105,9 @@ namespace Payments.SecurePay
                                 ))))).ToStringWithDeclaration();
         }
 
+        /// <summary>
+        /// TODO: replace this with creation of a SecurePayMessage object
+        /// </summary>
         public string TriggerPeriodicPaymentXml(string customerId, SecurePayPayment payment)
         {
             ValidatePayment(payment);
@@ -166,6 +135,9 @@ namespace Payments.SecurePay
                                 ))))).ToStringWithDeclaration();
         }
 
+        /// <summary>
+        /// TODO: replace this with creation of a SecurePayMessage object
+        /// </summary>
         public string TriggerPeriodicPaymentXmlWithMessageId(string messageId, string customerId, SecurePayPayment payment)
         {
             ValidatePayment(payment);
@@ -193,6 +165,9 @@ namespace Payments.SecurePay
                                 ))))).ToStringWithDeclaration();
         }
 
+        /// <summary>
+        /// TODO: replace this with creation of a SecurePayMessage object
+        /// </summary>
         public string CreateScheduledPaymentXml(SecurePayCardInfo card, string customerId, SecurePayPayment payment, DateTime startDate)
         {
             ValidatePayment(payment);
@@ -223,10 +198,13 @@ namespace Payments.SecurePay
                                 new XElement("paymentInterval", "3"),
                                 new XElement("numberOfPayments", 12),
                                 new XElement("periodicType", "3") // << Triggered Payment
-                                ))))).ToStringWithDeclaration();
+                            ))))).ToStringWithDeclaration();
         }
 
-        public string SinglePaymentXml(SecurePayCardInfo card, int amount, string purchaseOrderNo)
+        /// <summary>
+        /// TODO: replace this with creation of a SecurePayMessage object
+        /// </summary>
+        public string SinglePaymentXml(SecurePayCardInfo card, SecurePayPayment payment, string purchaseOrderNo)
         {
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
@@ -234,7 +212,7 @@ namespace Payments.SecurePay
                     new XElement("MessageInfo",
                         new XElement("messageID", "757a5be5b84b4d8ab84ec03ebd24af"),
                         new XElement("messageTimestamp", GetTimeStamp(DateTime.Now)),
-                        new XElement("timeoutValue", "30"),
+                        new XElement("timeoutValue", _connectionTimeoutSeconds),
                         new XElement("apiVersion", "xml-4.2")),
                     new XElement("MerchantInfo",
                         new XElement("merchantID", _merchantId),
@@ -245,11 +223,13 @@ namespace Payments.SecurePay
                             new XElement("Txn", new XAttribute("ID", "1"),
                                 new XElement("txnType", "0"),
                                 new XElement("txnSource", "0"),
-                                new XElement("amount", amount),
+                                new XElement("amount", payment.Amount),
+                                new XElement("currency", payment.Currency.ToUpper()),
                                 new XElement("purchaseOrderNo", purchaseOrderNo),
                                     new XElement("CreditCardInfo",
                                         new XElement("cardNumber", card.Number),
-                                        new XElement("expiryDate", card.Expiry))))))).ToStringWithDeclaration();
+                                        new XElement("expiryDate", card.Expiry)
+                                    )))))).ToStringWithDeclaration();
         }
 
         public static string GetTimeStamp(DateTime timeStamp)
@@ -265,19 +245,6 @@ namespace Payments.SecurePay
         public SecurePayMessage HttpPost(string uri, string message)
         {
             return _endpoint.HttpPost(uri, message);
-        }
-
-        private void ValidatePayment(SecurePayPayment payment)
-        {
-            if (payment.Amount <= 0)
-            {
-                throw new ArgumentException("payment.Amount was zero or negative", "payment");
-            }
-
-            if (string.IsNullOrWhiteSpace(payment.Currency) || payment.Currency.Length > 3)
-            {
-                throw new ArgumentException("payment.Currency is not valid", "payment");
-            }
         }
 
         public static string Sha1SecurePayDetails(string merchantId, string transxPassword, string transxType, string primaryRef, int amount, DateTime timestamp)
@@ -314,9 +281,52 @@ namespace Payments.SecurePay
             return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 30);
         }
 
-        public static string GetClientId()
+        public static string CreateClientId()
         {
             return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 20);
+        }
+
+        private void ValidatePayment(SecurePayPayment payment)
+        {
+            if (payment.Amount <= 0)
+            {
+                throw new ArgumentException("payment.Amount was zero or negative", "payment");
+            }
+
+            if (string.IsNullOrWhiteSpace(payment.Currency) || payment.Currency.Length > 3)
+            {
+                throw new ArgumentException("payment.Currency is not valid", "payment");
+            }
+        }
+
+        private void ValidateReponse(SecurePayMessage response, string callingMethod)
+        {
+            Defend(response.Status.StatusCode != (int)SecurePayStatusCodes.Normal, callingMethod, response);
+
+            var p = response.Periodic;
+
+            if (p == null || p.PeriodicList == null || p.PeriodicList.PeriodicItem == null)
+            {
+                return;
+            }
+
+            foreach (var pi in p.PeriodicList.PeriodicItem)
+            {
+                Defend(pi.ResponseCode != 0, callingMethod, pi.ResponseCode, pi.ResponseText);
+            }
+        }
+
+        private static void Defend(bool condition, string method, SecurePayMessage response)
+        {
+            Defend(condition, method, response.Status.StatusCode, response.Status.StatusDescription);
+        }
+
+        private static void Defend(bool condition, string method, int statusCode, string statusDescription)
+        {
+            if (condition)
+            {
+                throw new SecurePayException(method + " action was unsuccessful", statusCode, statusDescription);
+            }
         }
     }
 }

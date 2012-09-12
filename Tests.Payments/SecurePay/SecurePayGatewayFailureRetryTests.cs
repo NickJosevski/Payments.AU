@@ -37,14 +37,14 @@ namespace Tests.Payments.SecurePay
 
         private SecurePayGateway _gateway;
 
-        private ICommunicate _fakeGateway;
+        private ICommunicate _fakeCommunicationMechanism;
 
         [TestFixtureSetUp]
         public void Fixture()
         {
-            _fakeGateway = Substitute.For<ICommunicate>();
+            _fakeCommunicationMechanism = Substitute.For<ICommunicate>();
 
-            _gateway = new SecurePayGateway(_fakeGateway, "ABC0001", "abc123", ApiPeriodic);
+            _gateway = new SecurePayGateway(_fakeCommunicationMechanism, "ABC0001", "abc123", ApiPeriodic);
 
             _card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" };
         }
@@ -54,13 +54,13 @@ namespace Tests.Payments.SecurePay
         {
             // Arrange
             SecurePayMessage response = null;
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1151, Currency = "AUD" };
 
             const string Unable = "Unable To Connect To Server";
             // NOTE: we have max tries of 5, so set up 4 bad, then last will just work
-            _fakeGateway.HttpPost("", "").ReturnsForAnyArgs(
+            _fakeCommunicationMechanism.HttpPost("", "").ReturnsForAnyArgs(
                 new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
                 new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },
                 new SecurePayMessage { Status = new SecurePayStatus { StatusCode = 110, StatusDescription = Unable } },

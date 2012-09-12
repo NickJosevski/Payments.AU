@@ -27,7 +27,7 @@ namespace Tests.Payments.SecurePay
         public void Periodic_CreateAndCharge_SuccessfulCase()
         {
             // Arrange
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
 
@@ -47,7 +47,7 @@ namespace Tests.Payments.SecurePay
         public void Periodic_CreateAndCharge_UnSuccessfulCase_InvalidAmount()
         {
             // Arrange
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1013, Currency = "AUD" };
 
@@ -66,7 +66,7 @@ namespace Tests.Payments.SecurePay
         public void Periodic_CreateAndCharge_UnSuccessfulCase_InsufficientFunds()
         {
             // Arrange
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1051, Currency = "AUD" };
 
@@ -85,7 +85,7 @@ namespace Tests.Payments.SecurePay
         public void Periodic_CreateAndCharge_UnSuccessfulCase_ExpiredCard()
         {
             // Arrange
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1054, Currency = "AUD" };
 
@@ -104,7 +104,7 @@ namespace Tests.Payments.SecurePay
         public void Periodic_CreateAndCharge_UnSuccessfulCase_Error()
         {
             // Arrange
-            var clientId = SecurePayGateway.GetClientId();
+            var clientId = SecurePayGateway.CreateClientId();
 
             var payment = new SecurePayPayment { Amount = 1052, Currency = "AUD" };
 

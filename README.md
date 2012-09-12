@@ -1,30 +1,100 @@
 Payments.AU
 =============
 
-Some basic .NET based payment gateway logic for some providers in Australia.
+Some basic .NET based payment gateway logic for some providers in **Australia**. 
 
-## Gateways
+This started as an eWAY project, but I quickly realised it did not have a major capability I required. The plan is to slowly refine these so they are more solid and usable by others, but for now a few specific SecurePay capabilities in this library are quite solid. 
 
-### SecurePay 
+I would self classify this to be a **v0.6 release for SecurePay**, and a **v0.2 release for eWAY**. There are integration tests that communicate via test gateway accounts to demonstrate functionality.
 
-[SecurePay.com.au]( http://www.securepay.com.au/)
+## Supported Gateways
 
-### eWAY 
+### [SecurePay.com.au]( http://www.securepay.com.au/)
 
-[eWAY.com.au]( http://www.eway.com.au/ )
+### [eWAY.com.au]( http://www.eway.com.au/ )
  
-
-
 
 ## Capabilities
 
-~~ section in progress
+The intention of these gateway wrappers is to facilitate:  
 
+ - Creating a customer
+ - Storing customer card details with the provider.
+ - Supplying a **token** that represents a customer back to the provider at various times to 'bill' the customer again.
+ - Fetching past payment data for a given customer via a **token**.
+
+## This Library - Known Design Flaws
+
+ - API endpoint configuration is not great yet.
+ - Still using XDocument and XElement for requests (responses at least form class objects)
+
+<hr />
+
+
+## Limitations / Gotchas
+Both providers are missing important capability that's either not available or not documented (so might as well not be available). But SecurePay had greater support for at least basic **token based subsequent billing**.  
+
+ 1. If you use SecurePay to do Scheduled/Recurring (time period based) then the charge amount cannot be changed via the API.
+  - This was a major limitation
+  - Overcomed by just using the token, and taking responsibility for scheduling future transaction charges.
+ 2. Various technical ones about what data is required when.
+ 3. Multiple API endpoints for various actions
+  - If you want a mix of single charges and recurring payments currently require 2 instances of gateway;  
+     * one for: *securepay.com.au/xmlapi/payment*
+     * another for *securepay.com.au/xmlapi/periodic*
+ 4. Purely scheduled and automatically run transaction functionality is not complete.
+
+<hr />
 
 ## SecurePay Usage
 
-~~ section in progress
+Via ISecurePayGateway create a new SecurePayGateway supplying it with:
 
+  - ICommunicate endpoint 
+    - Create a new SecurePayWebCommunication - this is so unit testing can take place without a real web connection
+  - MerchantId 
+    - Provided by SecurePay specific to your account
+  - MerchantPassword 
+    - Provided by SecurePay specific to your account
+  - API Uri 
+    - Several to choose from 
+    - NOTE: This is a known design flaw in this library, if you want a mix of single charges and recurring payments currently require 2 instances of gateway.
+
+#### ISecurePayGateway  
+
+	public interface ISecurePayGateway
+	{
+	    SecurePayMessage SingleCharge(SecurePayCardInfo card, SecurePayPayment payment, string referenceId);
+	
+	    SecurePayMessage CreateCustomerWithCharge(string clientId, SecurePayCardInfo card, SecurePayPayment payment);
+	
+	    SecurePayMessage ChargeExistingCustomer(string clientId, SecurePayPayment payment);
+	}
+
+## Examples
+#### Repeatable Customer Entry / Token based future billing
+
+    string ApiPeriodic = "https://test.securepay.com.au/xmlapi/periodic";
+    var comm = new SecurePayWebCommunication();
+    
+    ISecurePayGateway gateway = new SecurePayGateway(comm, "ABC0001", "abc123", ApiPeriodic)
+    
+    
+    var card = new SecurePayCardInfo { Number = "4444333322221111", Expiry = "10/15" }
+    
+    var payment = new SecurePayPayment { Amount = 1151, Currency = "AUD" };
+    
+    // Must supply payment when creating customer, even though they will not be billed yet
+    
+    response = gateway.CreateCustomerWithCharge(clientId, card, payment)
+    
+
+    // Now you have an entry of the customer with SecurePay, to bill them anytime:
+    
+    var response = gateway.ChargeExistingCustomer(clientId, payment);
+
+
+### SecurePay Documentation Notes
 
 The Fingerprint is a protected record of the amount to be paid. It must be generated and then included as an input field to SecureFrame. It prevents a customer modifying the transaction details when submitting their card information.
 
@@ -43,6 +113,7 @@ The Fingerprint is a SHA1 hash of the above mandatory fields, plus the SecurePay
  - “amount”
  - “fp_timestamp”
 
+<hr />
 
 ## eWAY Usage
 
