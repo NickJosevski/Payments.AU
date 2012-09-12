@@ -39,7 +39,9 @@ namespace Tests.Payments.SecurePay
         [Test]
         public void SecurePayGateway_OneOffPayemt()
         {
-            var oneOffPayment = _gateway.SinglePaymentXml(ValidCard, ChargeAmount1 * 100, "OneOffInc");
+            var p = new SecurePayPayment { Amount = ChargeAmount1 * 100, Currency = "AUD" };
+
+            var oneOffPayment = _gateway.SinglePaymentXml(ValidCard, p, "OneOffInc");
             SendingDebug(oneOffPayment);
 
             var r = _gateway.SendMessage(oneOffPayment, "unit test");

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -41,7 +42,7 @@ namespace Payments.SecurePay
 
         public SecurePayMessage SendMessage(string requestMessage, string callingMethod)
         {
-            var response = HttpPost(_apiUri, requestMessage);
+            var response = _endpoint.HttpPost(_apiUri, requestMessage);
 
             ValidateReponse(response, callingMethod);
 
@@ -242,11 +243,6 @@ namespace Payments.SecurePay
             return String.Format(Format, timeStamp, sign, offset.TotalMinutes);
         }
 
-        public SecurePayMessage HttpPost(string uri, string message)
-        {
-            return _endpoint.HttpPost(uri, message);
-        }
-
         public static string Sha1SecurePayDetails(string merchantId, string transxPassword, string transxType, string primaryRef, int amount, DateTime timestamp)
         {
             return Sha1SecurePayDetailsHexString(
@@ -278,12 +274,25 @@ namespace Payments.SecurePay
 
         public static string CreateMessageId()
         {
-            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 30);
+            var randomArray = new byte[128];
+
+            new RNGCryptoServiceProvider().GetBytes(randomArray);
+
+            return RemoveNonAlphaNumeric(Convert.ToBase64String(randomArray)).Substring(0, 30);
         }
 
         public static string CreateClientId()
         {
-            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 20);
+            var randomArray = new byte[128];
+
+            new RNGCryptoServiceProvider().GetBytes(randomArray);
+
+            return RemoveNonAlphaNumeric(Convert.ToBase64String(randomArray)).Substring(0, 20);
+        }
+
+        private static string RemoveNonAlphaNumeric(string str)
+        {
+            return new Regex("[^a-zA-Z0-9 -]").Replace(str, "");
         }
 
         private void ValidatePayment(SecurePayPayment payment)

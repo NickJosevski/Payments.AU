@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -224,6 +226,72 @@ namespace Tests.Payments.SecurePay
                 // Assert
                 i++;
             }
+        }
+
+        [Test]
+        public void UniqueClientId_WithoutCuttingUpGuids()
+        {
+            var randomArray = new byte[48];
+
+            new RNGCryptoServiceProvider().GetBytes(randomArray);
+
+            var result = ReplaceNonAlphaNumeric(Convert.ToBase64String(randomArray));
+
+            Console.WriteLine(result);
+            Console.WriteLine(result.Length);
+
+            randomArray = new byte[15]; // 20 characters
+
+            new RNGCryptoServiceProvider().GetBytes(randomArray);
+
+            var result2 = ReplaceNonAlphaNumeric(Convert.ToBase64String(randomArray));
+
+            // Act
+            Console.WriteLine(result2);
+            Console.WriteLine(result2.Length);
+
+            // Assert
+        }
+
+        [Test]
+        public void CreateMessageId_Expect30()
+        {
+            // Assert
+            var seen = new List<string>();
+            for (var x = 0; x < 2048; x++)
+            {
+                var current = SecurePayGateway.CreateMessageId();
+                Assert.That(current.Length, Is.EqualTo(30));
+                Assert.That(current, Is.Not.ContainsSubstring(@"\"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"-"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"+"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"<"));
+                Assert.False(seen.Contains(current), "In a short run we found a duplicate, what did you do to break RNGCryptoServiceProvider!?");
+                seen.Add(current);
+            }
+        }
+
+        [Test]
+        public void CreateClientId_Expect20()
+        {
+            // Assert
+            var seen = new List<string>();
+            for (var x = 0; x < 2048; x++)
+            {
+                var current = SecurePayGateway.CreateClientId();
+                Assert.That(current.Length, Is.EqualTo(20));
+                Assert.That(current, Is.Not.ContainsSubstring(@"\"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"-"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"+"));
+                Assert.That(current, Is.Not.ContainsSubstring(@"<"));
+                Assert.False(seen.Contains(current), "In a short run we found a duplicate, what did you do to break RNGCryptoServiceProvider!?");
+                seen.Add(current);
+            }
+        }
+
+        private string ReplaceNonAlphaNumeric(string str)
+        {
+            return new Regex("[^a-zA-Z0-9 -]").Replace(str, "");
         }
     }
 }
