@@ -21,6 +21,11 @@ namespace Payments.SecurePay
 
         [XmlElement]
         public SecurePayPeriodic Periodic { get; set; }
+
+        public bool WasSuccessful()
+        {
+            return Status.StatusDescription.Equals("Normal") && Status.StatusCode == 0;
+        }
     }
 
     [Serializable]
