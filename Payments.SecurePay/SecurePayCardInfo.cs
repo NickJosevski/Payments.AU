@@ -27,10 +27,10 @@ namespace Payments.SecurePay
         public bool ValidateExpiry()
         {
             if (ExpiryMonth < 1 || ExpiryMonth > 12)
-                throw new ArgumentException("SecurePayCardInfo: supplied Month is greater than 12");
+                throw new SecurePayException("The supplied Expiry Month is not between 1 and 12");
 
             if (ExpiryYear < 0 || ExpiryYear > 9999)
-                throw new ArgumentException("SecurePayCardInfo: supplied ExpiryYear is not valid expecting format YY or YYYY");
+                throw new SecurePayException("The supplied Expiry Year is not valid expecting format YY or YYYY");
 
             return true;
         }

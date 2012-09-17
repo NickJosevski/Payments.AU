@@ -156,6 +156,7 @@ namespace Payments.SecurePay
         public string CardDescription { get; set; }
     }
 
+    [Serializable]
     public class SecurePayException : Exception
     {
         public int StatusCode { get; set; }
@@ -165,6 +166,8 @@ namespace Payments.SecurePay
         public SecurePayException(string msg)
             :base(msg)
         {
+            StatusCode = -1;
+            StatusDescription = msg;
         }
 
         public SecurePayException(string msg, int statusCode, string statusDescription)
