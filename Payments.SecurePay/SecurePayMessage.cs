@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Payments.SecurePay
@@ -25,6 +26,13 @@ namespace Payments.SecurePay
         public bool WasSuccessful()
         {
             return Status.StatusDescription.Equals("Normal") && Status.StatusCode == 0;
+        }
+
+        public string ReceiptNumbers()
+        {
+            var receiptCodes = Periodic.PeriodicList.PeriodicItem.Where(p => !String.IsNullOrWhiteSpace(p.Receipt)).Select(p => p.Receipt);
+
+            return string.Join(", ", receiptCodes);
         }
     }
 
@@ -194,6 +202,7 @@ namespace Payments.SecurePay
     public enum SecurePayStatusCodes
     {
         Normal = 0,
+        Expired = 54,
         InvalidMerchantId = 504,
         InvalidUrl = 505,
         UnableToConnectToServer = 510,

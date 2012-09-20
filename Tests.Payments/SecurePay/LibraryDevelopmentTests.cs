@@ -305,6 +305,47 @@ namespace Tests.Payments.SecurePay
             Assert.True(new SecurePayCardInfo { ExpiryMonth = 12, ExpiryYear = 112 }.ValidateExpiry(), "12/12");
         }
 
+        [Test]
+        public void SecurePayMessage_ReceiptNumbersWithoutData()
+        {
+            // Arrange
+            var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
+            var r = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.CreateClientId(), p);
+
+            // Act
+            var m = r.As<SecurePayMessage>();
+
+            // Assert
+            Assert.That(m.ReceiptNumbers(), Is.EqualTo(""));
+        }
+
+        [Test]
+        public void SecurePayMessage_ReceiptNumbersWithData()
+        {
+            // Arrange
+            var p = new SecurePayPayment { Amount = 1000, Currency = "AUD" };
+            var r = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, SecurePayGateway.CreateClientId(), p);
+
+            // Act
+            var m = r.As<SecurePayMessage>();
+            m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
+            {
+                Receipt = "abc"
+            });
+            m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
+            {
+                Receipt = "def"
+            });
+            m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
+            {
+                Receipt = null
+            });
+
+            // Assert
+            Assert.That(m.ReceiptNumbers(), Is.EqualTo("abc, def"));
+        }
+
+
         private string ReplaceNonAlphaNumeric(string str)
         {
             return new Regex("[^a-zA-Z0-9 -]").Replace(str, "");
