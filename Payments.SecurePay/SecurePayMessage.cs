@@ -167,18 +167,18 @@ namespace Payments.SecurePay
     [Serializable]
     public class SecurePayException : Exception
     {
-        public int StatusCode { get; set; }
+        public SecurePayStatusCodes StatusCode { get; set; }
 
         public string StatusDescription { get; set; }
 
         public SecurePayException(string msg)
             :base(msg)
         {
-            StatusCode = -1;
+            StatusCode = SecurePayStatusCodes.Unknown;
             StatusDescription = msg;
         }
 
-        public SecurePayException(string msg, int statusCode, string statusDescription)
+        public SecurePayException(string msg, SecurePayStatusCodes statusCode, string statusDescription)
             : base(msg)
         {
             StatusCode = statusCode;
@@ -191,6 +191,7 @@ namespace Payments.SecurePay
         }
     }
 
+    [Serializable]
     public enum ActionType
     {
         // Must be lowercase
@@ -199,9 +200,11 @@ namespace Payments.SecurePay
         delete
     }
 
+    [Serializable]
     public enum SecurePayStatusCodes
     {
         Normal = 0,
+        InsufficientFunds = 51,
         Expired = 54,
         InvalidMerchantId = 504,
         InvalidUrl = 505,
@@ -219,9 +222,11 @@ namespace Payments.SecurePay
         NotImplemented = 5575,
         TooManyRecordsForProcessing = 577,
         ProcessMethodHasNotBeenCalled = 580,
-        MerchantDisabled = 595
+        MerchantDisabled = 595,
+        Unknown = 999999
     }
 
+    [Serializable]
     public enum SecurePayCardType
     {
         Unknown = 0,

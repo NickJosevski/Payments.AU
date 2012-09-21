@@ -341,7 +341,7 @@ namespace Payments.SecurePay
         {
             if (condition)
             {
-                throw new SecurePayException(method + " action was unsuccessful", statusCode, statusDescription);
+                throw new SecurePayException(method + " action was unsuccessful", (SecurePayStatusCodes)statusCode, statusDescription);
             }
         }
     }
