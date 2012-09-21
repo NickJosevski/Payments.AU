@@ -90,7 +90,7 @@ namespace Tests.Payments.SecurePay
                 }
                 catch (SecurePayException ex)
                 {
-                    keepTrying = validRetryCodes.Contains(ex.StatusCode);
+                    keepTrying = validRetryCodes.Contains((int)ex.StatusCode);
                 }
             }
 
