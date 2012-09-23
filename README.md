@@ -1,11 +1,15 @@
 Payments.AU
 =============
 
-Some basic .NET based payment gateway logic for some providers in **Australia**. 
+
+## Introduction
+A simple .NET library for payment gateway logic for some providers in **Australia**. 
 
 This started as an eWAY project, but I quickly realised it did not have a major capability I required. The plan is to slowly refine these so they are more solid and usable by others, but for now a few specific SecurePay capabilities in this library are quite solid. 
 
-I would self classify this to be a **v0.6 release for SecurePay**, and a **v0.2 release for eWAY**. There are integration tests that communicate via test gateway accounts to demonstrate functionality.
+*Note:* Consider this library at **v0.6 for SecurePay**, and **v0.2 for eWAY**.
+ 
+There are integration tests that communicate via test gateway accounts to demonstrate functionality.
 
 ## Supported Gateways
 
@@ -23,7 +27,7 @@ The intention of these gateway wrappers is to facilitate:
  - Supplying a **token** that represents a customer back to the provider at various times to 'bill' the customer again.
  - Fetching past payment data for a given customer via a **token**.
 
-## This Library - Known Design Flaws
+## Known Design Flaws
 
  - API endpoint configuration is not great yet.
  - Still using XDocument and XElement for requests (responses at least form class objects)
