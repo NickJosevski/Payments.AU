@@ -317,6 +317,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Assert.That(m.ReceiptNumbers(), Is.EqualTo(""));
+            Assert.That(m.TransactionReference(), Is.EqualTo(""));
         }
 
         [Test]
@@ -330,11 +331,13 @@ namespace Tests.Payments.SecurePay
             var m = r.As<SecurePayMessage>();
             m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
             {
-                Receipt = "abc"
+                Receipt = "abc",
+                Ponum = "123"
             });
             m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
             {
-                Receipt = "def"
+                Receipt = "def",
+                Ponum = "456"
             });
             m.Periodic.PeriodicList.PeriodicItem.Add(new SecurePayPeriodicItem
             {
@@ -343,6 +346,7 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             Assert.That(m.ReceiptNumbers(), Is.EqualTo("abc, def"));
+            Assert.That(m.TransactionReference(), Is.EqualTo("123, 456"));
         }
 
 

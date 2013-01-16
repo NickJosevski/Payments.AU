@@ -34,6 +34,13 @@ namespace Payments.SecurePay
 
             return string.Join(", ", receiptCodes);
         }
+
+        public string TransactionReference()
+        {
+            var transactionRef = Periodic.PeriodicList.PeriodicItem.Where(p => !String.IsNullOrWhiteSpace(p.Ponum)).Select(p => p.Ponum);
+
+            return string.Join(", ", transactionRef);
+        }
     }
 
     [Serializable]
