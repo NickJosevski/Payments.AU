@@ -25,7 +25,8 @@ namespace Payments.SecurePay
 
         public bool WasSuccessful()
         {
-            return Status.StatusDescription.Equals("Normal") && Status.StatusCode == 0;
+            return Status.StatusDescription.Equals("Normal") 
+                && SecurePayGateway.ValidSuccessResponseCode.Contains(Status.StatusCode);
         }
 
         public string ReceiptNumbers()
@@ -211,6 +212,10 @@ namespace Payments.SecurePay
     public enum SecurePayStatusCodes
     {
         Normal = 0,
+        Approved = 8,
+        ApprovedVip = 11,
+        ApprovedUpd3 = 16,
+        ApprovedAnz = 77,
         UnacceptableTransactionFee = 23,
         NoCreditAccount = 39,
         RequestedFunctionNotSupported = 40,

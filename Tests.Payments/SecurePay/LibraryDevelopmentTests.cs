@@ -349,6 +349,19 @@ namespace Tests.Payments.SecurePay
             Assert.That(m.TransactionReference(), Is.EqualTo("123, 456"));
         }
 
+        [Test]
+        public void SecurePayMessage_WasSuccessful()
+        {
+            foreach (var code in new List<int> { 0, 8, 11, 16, 77 })
+            {
+                var spm = new SecurePayMessage
+                    {
+                        Status = new SecurePayStatus { StatusDescription = "Normal", StatusCode = code }
+                    };
+
+                Assert.True(spm.WasSuccessful());
+            }
+        }
 
         private string ReplaceNonAlphaNumeric(string str)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 using NUnit.Framework;
@@ -33,7 +34,8 @@ namespace Tests.Payments.SecurePay
             Assert.IsNotNull(r);
             Assert.That(r.Status.StatusDescription, Is.Not.ContainsSubstring("Unable to connect to server"));
             Assert.That(r.Status.StatusDescription, Is.EqualTo("Normal"));
-            Assert.That(r.Status.StatusCode, Is.EqualTo(0));
+            Assert.True(SecurePayGateway.ValidSuccessResponseCode.Contains(r.Status.StatusCode));
+            Assert.True(r.WasSuccessful());
             Assert.That(r.Periodic.PeriodicList.PeriodicItem[0].Successful, Is.EqualTo("yes"));
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -85,6 +86,37 @@ namespace Tests.Payments.SecurePay
 
             // Assert
             AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
+        }
+
+        [Test]
+        public void SecurePayGateway_PeriodicCharge_Setup_WithAlternateSuccessCodes_Then_Charge()
+        {
+            foreach (var code in SecurePayGateway.ValidSuccessResponseCode)
+            {
+                var p = new SecurePayPayment { Amount = 1000 + code, Currency = "AUD" };
+                var id = SecurePayGateway.CreateClientId();
+                var request = _gateway.CreateReadyToTriggerPaymentXml(ValidCard, id, p);
+                DebugDisplay(request);
+
+                var r = _gateway.SendMessage(request, "Setup_Then_Charge");
+
+                Console.WriteLine("First Response");
+                Console.WriteLine(r.Print());
+
+                // Assert
+                AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
+
+                request = _gateway.TriggerPeriodicPaymentXml(id, p);
+                DebugDisplay(request);
+
+                r = _gateway.SendMessage(request, "Setup_Then_Charge");
+
+                Console.WriteLine("Second Response");
+                Console.WriteLine(r.Print());
+
+                // Assert
+                AssertStatusGoodSuccessMarkerNoConnectionIssuesForPeriodicPayment(r);
+            }
         }
 
         [Test]

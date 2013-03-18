@@ -31,6 +31,14 @@ namespace Payments.SecurePay
 
         private readonly string _apiUri;
 
+        // There may need to be a better way to handle these
+        public static List<int> ValidSuccessResponseCode = new List<int>
+            {
+                (int)SecurePayStatusCodes.Normal,
+                (int)SecurePayStatusCodes.Approved,
+                (int)SecurePayStatusCodes.ApprovedAnz
+            };
+
         public SecurePayGateway(ICommunicate endpoint, string merchantId, string merchantPassword, string apiUri)
         {
             _endpoint = endpoint;
@@ -317,7 +325,7 @@ namespace Payments.SecurePay
 
         private void ValidateReponse(SecurePayMessage response, string callingMethod)
         {
-            Defend(response.Status.StatusCode != (int)SecurePayStatusCodes.Normal, callingMethod, response);
+            Defend(!IsAnApprovedSuccessResponseCode(response.Status.StatusCode), callingMethod, response);
 
             var p = response.Periodic;
 
@@ -328,8 +336,13 @@ namespace Payments.SecurePay
 
             foreach (var pi in p.PeriodicList.PeriodicItem)
             {
-                Defend(pi.ResponseCode != 0, callingMethod, pi.ResponseCode, pi.ResponseText);
+                Defend(!IsAnApprovedSuccessResponseCode(pi.ResponseCode), callingMethod, pi.ResponseCode, pi.ResponseText);
             }
+        }
+
+        private static bool IsAnApprovedSuccessResponseCode(int codeToCheck)
+        {
+            return ValidSuccessResponseCode.Contains(codeToCheck);
         }
 
         private static void Defend(bool condition, string method, SecurePayMessage response)
