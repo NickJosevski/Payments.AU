@@ -1,6 +1,7 @@
 Payments.AU
 =============
 
+[![Build status](https://ci.appveyor.com/api/projects/status/fr5vm15jos9dtffj)](https://ci.appveyor.com/project/NickJosevski/payments-au)
 
 ## Introduction
 A simple .NET library for payment gateway logic for some providers in **Australia**. 
