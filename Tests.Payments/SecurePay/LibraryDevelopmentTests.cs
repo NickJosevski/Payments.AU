@@ -359,7 +359,7 @@ namespace Tests.Payments.SecurePay
                         Status = new SecurePayStatus { StatusDescription = "Normal", StatusCode = code }
                     };
 
-                Assert.True(spm.WasSuccessful());
+                Assert.True(spm.WasSuccessful(), string.Format("Code '{0}' did not return success", code));
             }
         }
 
