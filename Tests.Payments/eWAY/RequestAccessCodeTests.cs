@@ -11,7 +11,8 @@ using Payments.eway.RapidAPI;
 
 namespace Tests.Payments.eWAY
 {
-    [TestFixture]
+    //[TestFixture]
+    // Test account expired, re-enable tiwh valid one (detected 1st June 2014)
     public class RequestAccessCodeTests
     {
         private EwayPaymentGateway _eway;
